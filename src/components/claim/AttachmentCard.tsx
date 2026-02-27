@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { AttachmentFile } from "@/types/claim";
-import { FileText, Trash2, X, MessageSquare, Check } from "lucide-react";
+import { FileText, Trash2, X, Check } from "lucide-react";
 
 interface AttachmentCardProps {
   attachment: AttachmentFile;
   onDelete: (id: string) => void;
   onNoteChange?: (id: string, note: string) => void;
   compact?: boolean;
+  autoShowNote?: boolean;
 }
 
-const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact }: AttachmentCardProps) => {
-  const [isEditingNote, setIsEditingNote] = useState(false);
+const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowNote = false }: AttachmentCardProps) => {
+  const [isEditingNote, setIsEditingNote] = useState(autoShowNote && !attachment.note);
   const [noteText, setNoteText] = useState(attachment.note || "");
 
   const formatSize = (bytes: number) => {
@@ -23,6 +24,45 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact }: Attachm
     onNoteChange?.(attachment.id, noteText.trim());
     setIsEditingNote(false);
   };
+
+  const dismissNote = () => {
+    setNoteText("");
+    setIsEditingNote(false);
+  };
+
+  const noteEditor = (small?: boolean) => (
+    <div className={`flex items-center gap-${small ? '1' : '2'}`}>
+      <input
+        type="text"
+        value={noteText}
+        onChange={(e) => setNoteText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") saveNote();
+          if (e.key === "Escape") dismissNote();
+        }}
+        placeholder="Describe this file (optional)…"
+        className={`flex-1 ${small ? 'text-[11px] px-2 py-1 rounded-md' : 'text-xs px-3 py-1.5 rounded-lg'} border border-input bg-background focus:outline-none focus:ring-${small ? '1' : '2'} focus:ring-ring/20`}
+        autoFocus
+      />
+      {noteText.trim() && (
+        <button onClick={saveNote} className={`${small ? 'p-1' : 'p-1.5'} rounded-lg hover:bg-success/10 text-success`}>
+          <Check className={`${small ? 'w-3 h-3' : 'w-4 h-4'}`} />
+        </button>
+      )}
+      <button onClick={dismissNote} className={`${small ? 'p-1' : 'p-1.5'} rounded-lg hover:bg-muted text-muted-foreground`}>
+        <X className={`${small ? 'w-3 h-3' : 'w-4 h-4'}`} />
+      </button>
+    </div>
+  );
+
+  const savedNote = attachment.note && !isEditingNote ? (
+    <p
+      className="text-xs text-muted-foreground italic cursor-pointer hover:text-foreground transition-colors"
+      onClick={() => setIsEditingNote(true)}
+    >
+      📝 {attachment.note}
+    </p>
+  ) : null;
 
   if (compact) {
     return (
@@ -42,46 +82,15 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact }: Attachm
             <p className="text-[10px] text-muted-foreground">{formatSize(attachment.size)}</p>
           </div>
           <button
-            onClick={() => setIsEditingNote(!isEditingNote)}
-            className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
-            title="Add note"
-          >
-            <MessageSquare className="w-3 h-3" />
-          </button>
-          <button
             onClick={() => onDelete(attachment.id)}
             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
           >
             <X className="w-3 h-3" />
           </button>
         </div>
-        {(isEditingNote || attachment.note) && (
-          <div className="pl-10">
-            {isEditingNote ? (
-              <div className="flex items-center gap-1">
-                <input
-                  type="text"
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && saveNote()}
-                  placeholder="Add a short note…"
-                  className="flex-1 text-[11px] px-2 py-1 rounded-md border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring/30"
-                  autoFocus
-                />
-                <button onClick={saveNote} className="p-1 rounded hover:bg-success/10 text-success">
-                  <Check className="w-3 h-3" />
-                </button>
-              </div>
-            ) : (
-              <p
-                className="text-[11px] text-muted-foreground italic cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => setIsEditingNote(true)}
-              >
-                📝 {attachment.note}
-              </p>
-            )}
-          </div>
-        )}
+        <div className="pl-10">
+          {isEditingNote ? noteEditor(true) : savedNote}
+        </div>
       </div>
     );
   }
@@ -103,13 +112,6 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact }: Attachm
           <p className="text-xs text-muted-foreground">{formatSize(attachment.size)}</p>
         </div>
         <button
-          onClick={() => setIsEditingNote(!isEditingNote)}
-          className={`p-2 rounded-lg hover:bg-accent/10 transition-colors ${attachment.note ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
-          title="Add note"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </button>
-        <button
           onClick={() => onDelete(attachment.id)}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-destructive/10 text-destructive"
           aria-label="Delete attachment"
@@ -117,33 +119,9 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact }: Attachm
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
-      {(isEditingNote || attachment.note) && (
-        <div className="ml-15 pl-4">
-          {isEditingNote ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && saveNote()}
-                placeholder="Add a short note…"
-                className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring/20"
-                autoFocus
-              />
-              <button onClick={saveNote} className="p-1.5 rounded-lg hover:bg-success/10 text-success">
-                <Check className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <p
-              className="text-xs text-muted-foreground italic cursor-pointer hover:text-foreground transition-colors"
-              onClick={() => setIsEditingNote(true)}
-            >
-              📝 {attachment.note}
-            </p>
-          )}
-        </div>
-      )}
+      <div className="pl-4">
+        {isEditingNote ? noteEditor() : savedNote}
+      </div>
     </div>
   );
 };
