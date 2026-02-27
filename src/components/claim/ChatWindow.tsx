@@ -24,7 +24,7 @@ const ChatWindow = ({ messages, isTyping, onDeleteAttachment, onNoteChange }: Ch
         msg.type === 'attachment' && msg.attachment ? (
           <div key={msg.id} className="flex justify-end animate-fade-in">
             <div className="max-w-[75%]">
-              <AttachmentCard attachment={msg.attachment} onDelete={onDeleteAttachment} onNoteChange={onNoteChange} />
+              <AttachmentCard attachment={msg.attachment} onDelete={onDeleteAttachment} onNoteChange={onNoteChange} autoShowNote />
             </div>
           </div>
         ) : (
