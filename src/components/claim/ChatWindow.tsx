@@ -8,9 +8,10 @@ interface ChatWindowProps {
   messages: Message[];
   isTyping: boolean;
   onDeleteAttachment: (id: string) => void;
+  onNoteChange?: (id: string, note: string) => void;
 }
 
-const ChatWindow = ({ messages, isTyping, onDeleteAttachment }: ChatWindowProps) => {
+const ChatWindow = ({ messages, isTyping, onDeleteAttachment, onNoteChange }: ChatWindowProps) => {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ const ChatWindow = ({ messages, isTyping, onDeleteAttachment }: ChatWindowProps)
         msg.type === 'attachment' && msg.attachment ? (
           <div key={msg.id} className="flex justify-end animate-fade-in">
             <div className="max-w-[75%]">
-              <AttachmentCard attachment={msg.attachment} onDelete={onDeleteAttachment} />
+              <AttachmentCard attachment={msg.attachment} onDelete={onDeleteAttachment} onNoteChange={onNoteChange} />
             </div>
           </div>
         ) : (
