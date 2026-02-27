@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AttachmentFile } from "@/types/claim";
-import { FileText, Trash2, X, Check } from "lucide-react";
+import { FileText, Trash2, X, Check, PenLine } from "lucide-react";
 
 interface AttachmentCardProps {
   attachment: AttachmentFile;
@@ -81,12 +81,23 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
             <p className="text-xs font-medium truncate">{attachment.name}</p>
             <p className="text-[10px] text-muted-foreground">{formatSize(attachment.size)}</p>
           </div>
-          <button
-            onClick={() => onDelete(attachment.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
-          >
-            <X className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-1">
+            {!isEditingNote && !attachment.note && (
+              <button
+                onClick={() => setIsEditingNote(true)}
+                className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
+                title="Add description"
+              >
+                <PenLine className="w-3 h-3" />
+              </button>
+            )}
+            <button
+              onClick={() => onDelete(attachment.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-destructive"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
         </div>
         <div className="pl-10">
           {isEditingNote ? noteEditor(true) : savedNote}
@@ -111,6 +122,15 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
           <p className="text-sm font-medium truncate">{attachment.name}</p>
           <p className="text-xs text-muted-foreground">{formatSize(attachment.size)}</p>
         </div>
+        {!isEditingNote && !attachment.note && (
+          <button
+            onClick={() => setIsEditingNote(true)}
+            className="p-2 rounded-lg hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
+            title="Add description"
+          >
+            <PenLine className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={() => onDelete(attachment.id)}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-destructive/10 text-destructive"
