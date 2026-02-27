@@ -13,6 +13,7 @@ export interface AttachmentFile {
   type: string;
   url: string;
   isImage: boolean;
+  note?: string;
 }
 
 export type ClaimStep = 'describe' | 'details' | 'review' | 'submit';

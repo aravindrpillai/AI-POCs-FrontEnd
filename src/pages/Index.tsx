@@ -105,6 +105,15 @@ const Index = () => {
     setMessages((prev) => prev.filter((m) => !(m.type === 'attachment' && m.attachment?.id === id)));
   }, []);
 
+  const handleNoteChange = useCallback((id: string, note: string) => {
+    setAttachments((prev) => prev.map((a) => a.id === id ? { ...a, note } : a));
+    setMessages((prev) => prev.map((m) =>
+      m.type === 'attachment' && m.attachment?.id === id
+        ? { ...m, attachment: { ...m.attachment, note } }
+        : m
+    ));
+  }, []);
+
   const handleModalClose = useCallback(() => {
     setShowModal(false);
     // Reset
@@ -136,7 +145,7 @@ const Index = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col lg:flex-row gap-4 md:gap-6">
         {/* Left: Chat */}
         <div className="flex-1 flex flex-col bg-card rounded-2xl shadow-card border border-border overflow-hidden min-h-0" style={{ maxHeight: 'calc(100vh - 120px)' }}>
-          <ChatWindow messages={messages} isTyping={isTyping} onDeleteAttachment={handleDeleteAttachment} />
+          <ChatWindow messages={messages} isTyping={isTyping} onDeleteAttachment={handleDeleteAttachment} onNoteChange={handleNoteChange} />
 
           {/* Submitting overlay */}
           {isSubmitting && (
@@ -186,7 +195,7 @@ const Index = () => {
               ) : (
                 <div className="space-y-2">
                   {attachments.map((a) => (
-                    <AttachmentCard key={a.id} attachment={a} onDelete={handleDeleteAttachment} compact />
+                    <AttachmentCard key={a.id} attachment={a} onDelete={handleDeleteAttachment} onNoteChange={handleNoteChange} compact />
                   ))}
                 </div>
               )}
