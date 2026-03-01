@@ -7,6 +7,10 @@ import Home from "./pages/Home";
 import Index from "./pages/claims/Index";
 import NotFound from "./pages/NotFound";
 
+import UploadResume from "./pages/cv/UploadResume";
+import SearchCandidates from "./pages/cv/SearchCandidates";
+import CandidateProfile from "./pages/cv/CandidateProfile";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -19,6 +23,11 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/claim" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/:convId" element={<Index />} />
+
+          <Route path="/cv/uploadresume" element={<UploadResume />} />
+          <Route path="/cv/profile/:id" element={<CandidateProfile />} />
+          <Route path="/cv/search" element={<SearchCandidates />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -104,7 +104,7 @@ const Home = () => {
             transition={{ delay: 0.8, duration: 0.5 }}
             whileHover={{ scale: 1.03, y: -4 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/resume")}
+            onClick={() => navigate("/cv/uploadresume")}
             className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-border bg-card text-foreground shadow-card overflow-hidden text-left"
           >
             <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-accent/[0.06]" />
@@ -118,7 +118,7 @@ const Home = () => {
               </p>
             </div>
             <div className="relative flex items-center gap-1.5 text-xs font-medium text-accent mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
-              Coming soon <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </motion.button>
         </div>

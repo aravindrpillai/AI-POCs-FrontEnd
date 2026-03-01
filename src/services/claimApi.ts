@@ -1,7 +1,7 @@
 import { AIResponse } from "@/types/claim";
 
-//const BASE_URL = "http://localhost:8000/claims/conversation";
-const BASE_URL = "https://ai.aravindpillai.com/claims/conversation";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL+"/claims/conversation";
+//const BASE_URL = "https://ai.aravindpillai.com/claims/conversation";
 
 export const claimApi = {
 
