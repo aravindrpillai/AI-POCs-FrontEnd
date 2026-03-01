@@ -9,11 +9,11 @@ interface ConfirmationModalProps {
 }
 
 const ConfirmationModal = ({ claimData, attachments, referenceId, onClose }: ConfirmationModalProps) => {
+  const description = claimData.what_happened || "";
   const summaryItems = [
-    { label: "Incident Type", value: claimData.incidentType || "Not specified" },
-    { label: "Date / Time", value: claimData.dateTime || "Not specified" },
-    { label: "Location", value: claimData.location || "Not specified" },
-    { label: "Description", value: claimData.description.length > 80 ? claimData.description.slice(0, 80) + '…' : claimData.description },
+    { label: "Date", value: claimData.incident_date || "Not specified" },
+    { label: "Location", value: claimData.incident_location || "Not specified" },
+    { label: "Description", value: description.length > 80 ? description.slice(0, 80) + '…' : (description || "Not specified") },
     { label: "Attachments", value: `${attachments.length} file(s)` },
   ];
 
