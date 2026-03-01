@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, FileText, Sparkles, ArrowRight, Cpu, Brain, Zap } from "lucide-react";
+import { ShieldCheck, FileText, Sparkles, ArrowRight, Cpu, Brain, Zap, Github, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 
 const floatingIcons = [
@@ -123,23 +123,45 @@ const Home = () => {
           </motion.button>
         </div>
 
+        {/* GitHub */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1, duration: 0.5 }}
+          className="mt-14 flex flex-col items-center gap-2"
+        >
+          <p className="text-xs text-muted-foreground">Interested to see my GitHub repository?</p>
+          <a
+            href="https://github.com/aravindrpillai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted shadow-card transition-colors"
+          >
+            <Github className="w-4 h-4" />
+            github.com/aravindrpillai
+            <ExternalLink className="w-3 h-3 text-muted-foreground" />
+          </a>
+        </motion.div>
+
         {/* Credits */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.6 }}
-          className="mt-16 text-xs text-muted-foreground"
+          transition={{ delay: 1.3, duration: 0.6 }}
+          className="mt-10 mb-6 flex flex-col items-center gap-1"
         >
-          Developed by{" "}
+          <p className="text-sm font-heading font-bold text-foreground">
+            Developed by Aravind
+          </p>
           <a
             href="https://aravindpillai.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-foreground hover:text-primary underline underline-offset-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 transition-colors"
           >
-            Aravind
+            aravindpillai.com <ExternalLink className="w-3 h-3" />
           </a>
-        </motion.p>
+        </motion.div>
       </div>
     </div>
   );
