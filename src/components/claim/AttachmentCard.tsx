@@ -133,9 +133,9 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
             </button>
           </div>
         </div>
-        <div className="pl-10">
+        {/* <div className="pl-10">
           {isEditingNote ? noteEditor(true) : savedNote}
-        </div>
+        </div> */}
       </div>
     );
   }
@@ -188,9 +188,9 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
-      <div className="pl-4">
+      {/* <div className="pl-4">
         {isEditingNote ? noteEditor() : savedNote}
-      </div>
+      </div> */}
     </div>
   );
 };
