@@ -18,7 +18,7 @@ const Home = () => {
 
       {/* Note */}
       <p className="text-sm md:text-base text-muted-foreground text-center max-w-md mb-10 leading-relaxed">
-        Streamline your workflows with intelligent AI agents. Choose a tool below to get started — more coming soon.
+        This is my playground where I experiment with AI models like Claude, OpenAI and Ollama. Choose a tool below to get started — more coming soon.
       </p>
 
       {/* Buttons */}
@@ -38,6 +38,19 @@ const Home = () => {
           Resume AI
         </button>
       </div>
+
+      {/* Credits */}
+      <p className="mt-16 text-xs text-muted-foreground">
+        Developed by{" "}
+        <a
+          href="https://aravindpillai.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-foreground hover:text-primary underline underline-offset-2 transition-colors"
+        >
+          Aravind
+        </a>
+      </p>
     </div>
   );
 };
