@@ -27,6 +27,8 @@ export const STEPS: { key: ClaimStep; label: string }[] = [
   { key: 'submit', label: 'Submit' },
 ];
 
+export type ClaimData = AIResponseData;
+
 export interface AIResponseData {
   what_happened: string;
   incident_date: string;
@@ -48,9 +50,7 @@ export interface AIResponseData {
   genuinity_rationale?: string;
   damage_map?: {
     is_collision: boolean;
-    // New format
     damages?: { view: string; zones: string[] }[];
-    // Old format fallback
     view?: string;
     damage_zones?: string[];
   };
