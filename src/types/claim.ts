@@ -14,18 +14,11 @@ export interface AttachmentFile {
   url: string;
   isImage: boolean;
   note?: string;
+  uploading?: boolean;
+  uploadError?: boolean;
 }
 
 export type ClaimStep = 'describe' | 'details' | 'review' | 'submit';
-
-export interface ClaimData {
-  description: string;
-  dateTime: string;
-  location: string;
-  incidentType: string;
-  injuries: string;
-  policeReport: string;
-}
 
 export const STEPS: { key: ClaimStep; label: string }[] = [
   { key: 'describe', label: 'Describe incident' },
@@ -34,18 +27,38 @@ export const STEPS: { key: ClaimStep; label: string }[] = [
   { key: 'submit', label: 'Submit' },
 ];
 
-export const FOLLOW_UP_QUESTIONS = [
-  "When did this incident occur? Please provide the date and approximate time.",
-  "Where did this happen? Please share the location or address.",
-  "What type of incident is this? (e.g., auto accident, property damage, theft, or other)",
-  "Were there any injuries involved? If so, please briefly describe them.",
-  "Do you have a police report or reference number? If so, please share it.",
-];
+export interface AIResponseData {
+  what_happened: string;
+  incident_date: string;
+  incident_location: string;
+  parties_involved: {
+    name: string;
+    role: string;
+    phone: string;
+    email: string;
+    injury: string;
+  }[];
+  vehicle_number: string;
+  other_vehicle_number?: string;
+  contact_details: { name: string; phone: string; email: string }[];
+  police_fir_number: string;
+  policy_number: string;
+  severity?: number;
+  genuinity_score?: number;
+  genuinity_rationale?: string;
+  damage_map?: {
+    is_collision: boolean;
+    // New format
+    damages?: { view: string; zones: string[] }[];
+    // Old format fallback
+    view?: string;
+    damage_zones?: string[];
+  };
+}
 
-export const CLAIM_FIELD_KEYS: (keyof ClaimData)[] = [
-  'dateTime',
-  'location',
-  'incidentType',
-  'injuries',
-  'policeReport',
-];
+export interface AIResponse {
+  conv_id: string;
+  reply: string;
+  summary: boolean;
+  data: AIResponseData | null;
+}

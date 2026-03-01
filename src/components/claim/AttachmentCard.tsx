@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AttachmentFile } from "@/types/claim";
-import { FileText, Trash2, X, Check, PenLine } from "lucide-react";
+import { FileText, Trash2, X, Check, PenLine, Loader2, AlertCircle } from "lucide-react";
 
 interface AttachmentCardProps {
   attachment: AttachmentFile;
@@ -28,6 +28,31 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
   const dismissNote = () => {
     setNoteText("");
     setIsEditingNote(false);
+  };
+
+  const statusBadge = () => {
+    if (attachment.uploading) {
+      return (
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          <span>Uploading…</span>
+        </div>
+      );
+    }
+    if (attachment.uploadError) {
+      return (
+        <div className="flex items-center gap-1 text-[10px] text-destructive">
+          <AlertCircle className="w-3 h-3" />
+          <span>Failed</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1 text-[10px] text-success">
+        <Check className="w-3 h-3" />
+        <span>Uploaded</span>
+      </div>
+    );
   };
 
   const noteEditor = (small?: boolean) => (
@@ -67,10 +92,17 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
   if (compact) {
     return (
       <div className="space-y-1">
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-muted group hover:bg-secondary transition-colors">
+        <div className={`flex items-center gap-2 p-2 rounded-lg group transition-colors ${
+          attachment.uploadError ? 'bg-destructive/5' : 'bg-muted hover:bg-secondary'
+        }`}>
           {attachment.isImage ? (
-            <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0">
+            <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 relative">
               <img src={attachment.url} alt={attachment.name} className="w-full h-full object-cover" />
+              {attachment.uploading && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <Loader2 className="w-3 h-3 text-white animate-spin" />
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-8 h-8 rounded bg-info/10 flex items-center justify-center flex-shrink-0">
@@ -79,14 +111,16 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
           )}
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate">{attachment.name}</p>
-            <p className="text-[10px] text-muted-foreground">{formatSize(attachment.size)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] text-muted-foreground">{formatSize(attachment.size)}</p>
+              {statusBadge()}
+            </div>
           </div>
           <div className="flex items-center gap-1">
-            {!isEditingNote && !attachment.note && (
+            {!attachment.uploading && !attachment.uploadError && !isEditingNote && !attachment.note && (
               <button
                 onClick={() => setIsEditingNote(true)}
                 className="p-1 rounded hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
-                title="Add description"
               >
                 <PenLine className="w-3 h-3" />
               </button>
@@ -108,25 +142,41 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
 
   return (
     <div className="space-y-2 animate-fade-in">
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-card shadow-card border border-border group">
+      <div className={`flex items-center gap-3 p-3 rounded-xl border group transition-colors ${
+        attachment.uploadError
+          ? 'bg-destructive/5 border-destructive/20'
+          : 'bg-card shadow-card border-border'
+      }`}>
         {attachment.isImage ? (
-          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 relative">
             <img src={attachment.url} alt={attachment.name} className="w-full h-full object-cover" />
+            {attachment.uploading && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
+                <Loader2 className="w-4 h-4 text-white animate-spin" />
+              </div>
+            )}
           </div>
         ) : (
-          <div className="w-12 h-12 rounded-lg bg-info/10 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-lg bg-info/10 flex items-center justify-center flex-shrink-0 relative">
             <FileText className="w-6 h-6 text-info" />
+            {attachment.uploading && (
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-lg">
+                <Loader2 className="w-4 h-4 text-white animate-spin" />
+              </div>
+            )}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{attachment.name}</p>
-          <p className="text-xs text-muted-foreground">{formatSize(attachment.size)}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs text-muted-foreground">{formatSize(attachment.size)}</p>
+            {statusBadge()}
+          </div>
         </div>
-        {!isEditingNote && !attachment.note && (
+        {!attachment.uploading && !attachment.uploadError && !isEditingNote && !attachment.note && (
           <button
             onClick={() => setIsEditingNote(true)}
             className="p-2 rounded-lg hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
-            title="Add description"
           >
             <PenLine className="w-4 h-4" />
           </button>
@@ -134,7 +184,6 @@ const AttachmentCard = ({ attachment, onDelete, onNoteChange, compact, autoShowN
         <button
           onClick={() => onDelete(attachment.id)}
           className="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-destructive/10 text-destructive"
-          aria-label="Delete attachment"
         >
           <Trash2 className="w-4 h-4" />
         </button>
