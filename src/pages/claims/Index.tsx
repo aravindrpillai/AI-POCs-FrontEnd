@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Message, AttachmentFile, ClaimStep, AIResponseData } from "@/types/claim";
 import ChatWindow from "@/components/claim/ChatWindow";
@@ -28,34 +28,47 @@ const Index = () => {
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const pendingUploadsRef = useRef<Set<string>>(new Set());
+
   const addMessage = useCallback((msg: Omit<Message, 'id' | 'timestamp'>) => {
     setMessages((prev) => [...prev, { ...msg, id: genId(), timestamp: new Date() }]);
   }, []);
 
-  // ── On mount: either create new conv or load existing ──────────────────
+  // ── Handle AI response state updates ──────────────────────────────────
+  const handleAIResponse = useCallback((response: any) => {
+    if (response.summary && response.data) {
+      setCurrentStep('submit');
+      setSummaryData(response.data);
+      setSubmitted(true);
+      setShowSummary(true);
+    } else if (
+      response.data?.incident_location &&
+      response.data?.parties_involved?.length > 0
+    ) {
+      setCurrentStep('review');
+    }
+  }, []);
+
+  // ── On mount: create new conv or load existing ─────────────────────────
   useEffect(() => {
     const init = async () => {
       setInitializing(true);
       try {
         if (convIdParam === "new") {
-          // Create fresh conversation
           const newConvId = await claimApi.createConversation();
           setConvId(newConvId);
           navigate(`/claim/${newConvId}`, { replace: true });
           setMessages([{ id: genId(), type: 'ai', content: WELCOME_MESSAGE, timestamp: new Date() }]);
         } else if (convIdParam) {
-          // Load existing conversation
           const data = await claimApi.getConversation(convIdParam);
           setConvId(data.conv_id);
 
-          // Restore submitted state
           if (data.submitted && data.summary) {
             setSubmitted(true);
             setSummaryData(data.summary);
             setCurrentStep('submit');
           }
 
-          // Restore messages from history
           if (data.messages.length === 0) {
             setMessages([{ id: genId(), type: 'ai', content: WELCOME_MESSAGE, timestamp: new Date() }]);
           } else {
@@ -66,7 +79,6 @@ const Index = () => {
                 type: (m.is_file ? 'attachment' : m.role === 'user' ? 'user' : 'ai') as Message['type'],
                 content: m.message ?? '',
                 timestamp: new Date(m.created_at),
-                // For file messages show as plain text note in chat
                 ...(m.is_file && {
                   type: 'ai' as const,
                   content: `📎 File uploaded: ${m.filename}${m.message ? ` — ${m.message}` : ''}`,
@@ -75,7 +87,6 @@ const Index = () => {
             ];
             setMessages(restored);
 
-            // Determine current step from history
             const hasAssistant = data.messages.some((m) => m.role === 'assistant');
             if (data.submitted) {
               setCurrentStep('submit');
@@ -94,6 +105,7 @@ const Index = () => {
     init();
   }, [convIdParam]);
 
+  // ── Send message ───────────────────────────────────────────────────────
   const handleSend = useCallback(async (text: string) => {
     if (!convId || submitted) return;
     setError(null);
@@ -105,31 +117,28 @@ const Index = () => {
       const response = await claimApi.sendMessage(text, convId);
       setIsTyping(false);
       addMessage({ type: 'ai', content: response.reply });
-
-      if (response.summary && response.data) {
-        setCurrentStep('submit');
-        setSummaryData(response.data);
-        setSubmitted(true);
-        setShowSummary(true);
-      } else if (
-        response.data?.incident_location &&
-        response.data?.parties_involved?.length > 0
-      ) {
-        setCurrentStep('review');
-      }
+      handleAIResponse(response);
     } catch (err: any) {
       setIsTyping(false);
       const msg = err.message || "Something went wrong. Please try again.";
       setError(msg);
       addMessage({ type: 'ai', content: `Sorry, I ran into an issue: ${msg}` });
     }
-  }, [convId, submitted, currentStep, addMessage]);
+  }, [convId, submitted, currentStep, addMessage, handleAIResponse]);
 
+  // ── Attach files ───────────────────────────────────────────────────────
   const handleAttach = useCallback(async (files: FileList) => {
     if (!convId || submitted) return;
 
-    Array.from(files).forEach(async (file) => {
-      const tempId = genId();
+    const fileArray = Array.from(files);
+
+    // Register all as pending before starting uploads
+    const tempIds = fileArray.map(() => genId());
+    tempIds.forEach((id) => pendingUploadsRef.current.add(id));
+
+    const uploadPromises = fileArray.map(async (file, index) => {
+      const tempId = tempIds[index];
+
       const attachment: AttachmentFile = {
         id: tempId,
         name: file.name,
@@ -140,38 +149,81 @@ const Index = () => {
         uploading: true,
         uploadError: false,
       };
+
       setAttachments((prev) => [...prev, attachment]);
       addMessage({ type: 'attachment', content: '', attachment });
 
       try {
         const result = await claimApi.uploadFile(convId, file);
+
         const update = (a: AttachmentFile) =>
-          a.id === tempId ? { ...a, id: result.file_uid, uploading: false, uploadError: false } : a;
+          a.id === tempId
+            ? { ...a, id: result.file_uid, uploading: false, uploadError: false }
+            : a;
+
         setAttachments((prev) => prev.map(update));
-        setMessages((prev) => prev.map((m) =>
-          m.type === 'attachment' && m.attachment?.id === tempId
-            ? { ...m, attachment: update(m.attachment!) }
-            : m
-        ));
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.type === 'attachment' && m.attachment?.id === tempId
+              ? { ...m, attachment: update(m.attachment!) }
+              : m
+          )
+        );
+
+        pendingUploadsRef.current.delete(tempId);
+        return { success: true };
+
       } catch {
         const markError = (a: AttachmentFile) =>
           a.id === tempId ? { ...a, uploading: false, uploadError: true } : a;
+
         setAttachments((prev) => prev.map(markError));
-        setMessages((prev) => prev.map((m) =>
-          m.type === 'attachment' && m.attachment?.id === tempId
-            ? { ...m, attachment: markError(m.attachment!) }
-            : m
-        ));
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.type === 'attachment' && m.attachment?.id === tempId
+              ? { ...m, attachment: markError(m.attachment!) }
+              : m
+          )
+        );
+
+        pendingUploadsRef.current.delete(tempId);
+        return { success: false };
       }
     });
-  }, [convId, submitted, addMessage]);
 
+    // Wait for ALL uploads in this batch to finish
+    const results = await Promise.all(uploadPromises);
+    const succeededCount = results.filter((r) => r.success).length;
+
+    // Auto-send message only if at least one upload succeeded
+    if (succeededCount > 0) {
+      const fileWord = succeededCount === 1 ? "file" : "files";
+      const autoMsg  = `${succeededCount} ${fileWord} attached.`;
+
+      try {
+        setIsTyping(true);
+        const response = await claimApi.sendMessage(autoMsg, convId);
+        setIsTyping(false);
+        addMessage({ type: 'user', content: autoMsg });
+        addMessage({ type: 'ai', content: response.reply });
+        handleAIResponse(response);
+      } catch (err: any) {
+        setIsTyping(false);
+        const msg = err.message || "Something went wrong after uploading files.";
+        setError(msg);
+        addMessage({ type: 'ai', content: `Sorry, I ran into an issue: ${msg}` });
+      }
+    }
+  }, [convId, submitted, addMessage, handleAIResponse]);
+
+  // ── Delete attachment ──────────────────────────────────────────────────
   const handleDeleteAttachment = useCallback((id: string) => {
     if (submitted) return;
     setAttachments((prev) => prev.filter((a) => a.id !== id));
     setMessages((prev) => prev.filter((m) => !(m.type === 'attachment' && m.attachment?.id === id)));
   }, [submitted]);
 
+  // ── Note change ────────────────────────────────────────────────────────
   const handleNoteChange = useCallback((id: string, note: string) => {
     setAttachments((prev) => prev.map((a) => a.id === id ? { ...a, note } : a));
     setMessages((prev) => prev.map((m) =>
@@ -212,7 +264,7 @@ const Index = () => {
     );
   }
 
-  // ── Error ───────────────────────────────────────────────────────────────
+  // ── Error ────────────────────────────────────────────────────────────────
   if (error && !convId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -229,7 +281,7 @@ const Index = () => {
     );
   }
 
-  // ── Main ────────────────────────────────────────────────────────────────
+  // ── Main ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col">
 
@@ -276,7 +328,6 @@ const Index = () => {
 
           {/* Bottom bar */}
           {submitted && summaryData ? (
-            // ── Submitted / locked state ──────────────────────────────────
             <div className="border-t border-border bg-success/5 px-6 py-5 flex flex-col items-center gap-4 flex-shrink-0">
               <div className="flex items-center gap-2 text-success">
                 <CheckCircle2 className="w-5 h-5" />
@@ -301,7 +352,6 @@ const Index = () => {
               </div>
             </div>
           ) : (
-            // ── Active composer ───────────────────────────────────────────
             <Composer
               onSend={handleSend}
               onAttach={handleAttach}
@@ -327,7 +377,6 @@ const Index = () => {
               <ProgressPanel currentStep={currentStep} />
             </div>
 
-            {/* Lock notice when submitted */}
             {submitted && (
               <div className="bg-success/5 rounded-2xl border border-success/20 p-4 flex items-start gap-3">
                 <Lock className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
@@ -340,7 +389,6 @@ const Index = () => {
               </div>
             )}
 
-            {/* Attachments — read only when submitted */}
             <div className="bg-card rounded-2xl shadow-card border border-border p-5">
               <h3 className="text-sm font-heading font-semibold mb-3">
                 Attachments{" "}
@@ -365,7 +413,6 @@ const Index = () => {
               )}
             </div>
 
-            {/* Tips — hide when submitted */}
             {!submitted && (
               <div className="bg-accent/5 rounded-2xl border border-accent/20 p-5">
                 <div className="flex items-center gap-2 mb-3">
