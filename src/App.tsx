@@ -19,6 +19,8 @@ import MedAIConversation from "./pages/med-ai/Conversation";
 import FinanceWelcome from "./pages/finance/Welcome";
 import FinanceQuestions from "./pages/finance/Questions";
 import FinanceSummary from "./pages/finance/Summary";
+import OllamaWelcome from "./pages/ollama/Welcome";
+import OllamaChat from "./pages/ollama/Chat";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,9 @@ const App = () => (
           <Route path="/finance-advisor" element={<FinanceWelcome />} />
           <Route path="/finance-advisor/questions/:sessionId" element={<FinanceQuestions />} />
           <Route path="/finance-advisor/summary/:sessionId" element={<FinanceSummary />} />
+
+          <Route path="/ollama" element={<OllamaWelcome />} />
+          <Route path="/ollama/chat" element={<OllamaChat />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
