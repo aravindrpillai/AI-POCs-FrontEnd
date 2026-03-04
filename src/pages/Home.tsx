@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, FileText, Sparkles, ArrowRight, Cpu, Brain, Zap, Github, ExternalLink, Stethoscope } from "lucide-react";
+import { ShieldCheck, FileText, Sparkles, ArrowRight, Cpu, Brain, Zap, Github, ExternalLink, Stethoscope, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 
 const floatingIcons = [
@@ -72,7 +72,7 @@ const Home = () => {
         </motion.p>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full max-w-2xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-4xl">
           <motion.button
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -142,6 +142,30 @@ const Home = () => {
               </p>
             </div>
             <div className="relative flex items-center gap-1.5 text-xs font-medium text-info mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.5 }}
+            whileHover={{ scale: 1.03, y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/finance-advisor")}
+            className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-border bg-card text-foreground shadow-card overflow-hidden text-left"
+          >
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-success/[0.08]" />
+            <div className="relative">
+              <div className="w-11 h-11 rounded-xl bg-success/10 flex items-center justify-center mb-1">
+                <Wallet className="w-5 h-5 text-success" />
+              </div>
+              <h2 className="text-lg font-heading font-bold">Finance AI</h2>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                AI-powered financial health check & advisor
+              </p>
+            </div>
+            <div className="relative flex items-center gap-1.5 text-xs font-medium text-success mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </motion.button>
