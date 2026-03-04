@@ -46,8 +46,10 @@ const App = () => (
           <Route path="/med-ai/diagnose/:convId" element={<MedAIConversation />} />
 
           <Route path="/finance-advisor" element={<FinanceWelcome />} />
+          <Route path="/finance-advisor/questions/" element={<FinanceQuestions />} />
           <Route path="/finance-advisor/questions/:sessionId" element={<FinanceQuestions />} />
           <Route path="/finance-advisor/summary/:sessionId" element={<FinanceSummary />} />
+          
 
           <Route path="/ollama" element={<OllamaWelcome />} />
           <Route path="/ollama/chat" element={<OllamaChat />} />

@@ -26,7 +26,6 @@ const floatingIcons = [
 
 const Welcome = () => {
   const navigate = useNavigate();
-  const sessionId = crypto.randomUUID().slice(0, 8);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
@@ -119,7 +118,7 @@ const Welcome = () => {
         >
           <Button
             size="lg"
-            onClick={() => navigate(`/finance-advisor/questions/${sessionId}`)}
+            onClick={() => navigate("/finance-advisor/questions")}
             className="bg-success hover:bg-success/90 text-success-foreground gap-2 px-8 text-base font-heading font-bold shadow-elevated"
           >
             Start Financial Check-up <ArrowRight className="w-4 h-4" />

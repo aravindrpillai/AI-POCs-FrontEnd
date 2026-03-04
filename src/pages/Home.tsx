@@ -72,7 +72,7 @@ const Home = () => {
         </motion.p>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full max-w-6xl">
           <motion.button
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -170,13 +170,13 @@ const Home = () => {
             </div>
           </motion.button>
 
-          <motion.button
+          {/* <motion.button
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.1, duration: 0.5 }}
             whileHover={{ scale: 1.03, y: -4 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/ollama")}
+            onClick={() => navigate("/ollama/chat")}
             className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-border bg-card text-foreground shadow-card overflow-hidden text-left"
           >
             <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-primary/[0.08]" />
@@ -192,7 +192,7 @@ const Home = () => {
             <div className="relative flex items-center gap-1.5 text-xs font-medium text-primary mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </div>
-          </motion.button>
+          </motion.button> */}
         </div>
 
         {/* GitHub */}

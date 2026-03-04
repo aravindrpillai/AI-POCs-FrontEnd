@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Loader2, DollarSign, Search, Check,
@@ -15,6 +15,9 @@ import {
 import {
   FinanceIntake, WizardStep, EMPLOYMENT_OPTIONS, STEP_TITLES, defaultIntake, CITIES,
 } from "@/types/finance";
+import {
+  createFinanceRecord, updateFinanceRecord, getFinanceRecord,
+} from "@/services/financeService";
 
 /* ── Searchable City Picker ── */
 const CityPicker = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
@@ -87,13 +90,33 @@ const CityPicker = ({ value, onChange }: { value: string; onChange: (v: string) 
   );
 };
 
+/* ── helpers ── */
+const intakeToPayload = (data: FinanceIntake) => ({
+  age:               data.age,
+  city:              data.location,
+  employment_status: data.employmentStatus,
+  primary_income:    data.primaryIncome,
+  secondary_income:  data.secondaryIncome,
+  rent_mortgage:     data.rent,
+  insurance_premiums: data.insurance,
+  subscriptions:     data.subscriptions,
+  outstanding_loans: data.totalOutstandingLoan,
+  variable_expenses: data.variableExpenses,
+  savings_balance:   data.savingsBalance,
+  investments:       data.investments,
+  property_value:    data.propertyValue,
+  emergency_fund:    data.emergencyFund,
+  goals:             data.goalSummary,
+});
+
 /* ── Main Component ── */
 const Questions = () => {
   const navigate = useNavigate();
-  const { sessionId } = useParams<{ sessionId: string }>();
   const [step, setStep] = useState<WizardStep>(1);
   const [data, setData] = useState<FinanceIntake>({ ...defaultIntake });
+  const [recordId, setRecordId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const TOTAL_STEPS = 5;
 
@@ -109,15 +132,47 @@ const Questions = () => {
     return true;
   };
 
-  const nextStep = () => { if (step < TOTAL_STEPS) setStep((s) => (s + 1) as WizardStep); };
-  const prevStep = () => { if (step > 1) setStep((s) => (s - 1) as WizardStep); };
+  /* ── Persist to API on each step advance ── */
+  const saveStep = async (): Promise<string | null> => {
+    try {
+      const payload = intakeToPayload(data);
+      if (recordId) {
+        await updateFinanceRecord(recordId, payload);
+        return recordId;
+      } else {
+        const record = await createFinanceRecord(payload);
+        setRecordId(record.id);
+        // Update URL with backend UUID without adding a new history entry
+        navigate(`/finance-advisor/questions/${record.id}`, { replace: true });
+        return record.id;
+      }
+    } catch (e) {
+      setError("Failed to save progress. Please try again.");
+      return null;
+    }
+  };
+
+  const nextStep = async () => {
+    if (step >= TOTAL_STEPS) return;
+    setLoading(true);
+    setError(null);
+    const id = await saveStep();
+    setLoading(false);
+    if (id) setStep((s) => (s + 1) as WizardStep);
+  };
+
+  const prevStep = () => {
+    setError(null);
+    if (step > 1) setStep((s) => (s - 1) as WizardStep);
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
-    try {
-      sessionStorage.setItem(`finance-data-${sessionId}`, JSON.stringify(data));
-      navigate(`/finance-advisor/summary/${sessionId}`);
-    } catch {
+    setError(null);
+    const id = await saveStep();
+    if (id) {
+      navigate(`/finance-advisor/summary/${id}`);
+    } else {
       setLoading(false);
     }
   };
@@ -242,7 +297,7 @@ const Questions = () => {
             {Array.from({ length: TOTAL_STEPS }, (_, i) => (
               <button
                 key={i}
-                onClick={() => setStep((i + 1) as WizardStep)}
+                onClick={() => i + 1 < step && setStep((i + 1) as WizardStep)}
                 className={`w-6 h-6 rounded-full text-[10px] font-bold border-2 transition-all ${
                   i + 1 <= step
                     ? "bg-success border-success text-success-foreground"
@@ -265,7 +320,6 @@ const Questions = () => {
             transition={{ duration: 0.25 }}
             className="bg-card border border-border rounded-2xl p-5 sm:p-6 shadow-card relative overflow-hidden"
           >
-            {/* Money pattern */}
             <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.03] pointer-events-none">
               <DollarSign className="w-full h-full" />
             </div>
@@ -277,14 +331,19 @@ const Questions = () => {
           </motion.div>
         </AnimatePresence>
 
+        {/* Error */}
+        {error && (
+          <p className="mt-3 text-xs text-destructive text-center">{error}</p>
+        )}
+
         {/* Navigation */}
         <div className="flex justify-between mt-5 gap-3">
-          <Button variant="outline" onClick={prevStep} disabled={step === 1} className="gap-1.5">
+          <Button variant="outline" onClick={prevStep} disabled={step === 1 || loading} className="gap-1.5">
             <ArrowLeft className="w-4 h-4" /> Back
           </Button>
           {step < TOTAL_STEPS ? (
-            <Button onClick={nextStep} disabled={!canGoNext()} className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground">
-              Next <ArrowRight className="w-4 h-4" />
+            <Button onClick={nextStep} disabled={!canGoNext() || loading} className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Next <ArrowRight className="w-4 h-4" /></>}
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={loading} className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground">
