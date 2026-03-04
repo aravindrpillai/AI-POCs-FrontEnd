@@ -2,25 +2,26 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Wallet, PiggyBank, TrendingUp, BarChart3, Target, ShieldCheck,
-  ArrowRight, ArrowLeft, CircleDollarSign, Landmark
+  ArrowRight, ArrowLeft, DollarSign, Landmark, Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const steps = [
-  { icon: Wallet, title: "Your Profile", desc: "Tell us about yourself — age, location, dependants" },
-  { icon: CircleDollarSign, title: "Income & Expenses", desc: "Map your earnings and spending habits" },
-  { icon: Landmark, title: "Assets & Debts", desc: "Savings, investments, loans, credit cards" },
-  { icon: Target, title: "Goals", desc: "Short, medium, and long-term financial goals" },
-  { icon: BarChart3, title: "AI Report", desc: "Get your personalised financial health dashboard" },
+  { icon: DollarSign, title: "Your Profile", desc: "Age, city, employment status" },
+  { icon: Banknote, title: "Income", desc: "Primary and secondary earnings" },
+  { icon: Wallet, title: "Expenses", desc: "Fixed and variable spending" },
+  { icon: Landmark, title: "Assets", desc: "Savings, investments, property" },
+  { icon: Target, title: "Goals", desc: "What you're saving for" },
+  { icon: BarChart3, title: "AI Report", desc: "Your personalised dashboard" },
 ];
 
 const floatingIcons = [
-  { Icon: Wallet, x: "8%", y: "18%", delay: 0, size: 22 },
-  { Icon: PiggyBank, x: "88%", y: "12%", delay: 0.4, size: 26 },
-  { Icon: TrendingUp, x: "78%", y: "72%", delay: 0.9, size: 20 },
-  { Icon: BarChart3, x: "12%", y: "68%", delay: 1.3, size: 24 },
-  { Icon: Target, x: "52%", y: "8%", delay: 0.7, size: 18 },
-  { Icon: ShieldCheck, x: "92%", y: "48%", delay: 1.1, size: 20 },
+  { Icon: DollarSign, x: "6%", y: "15%", delay: 0, size: 28 },
+  { Icon: PiggyBank, x: "90%", y: "10%", delay: 0.4, size: 26 },
+  { Icon: TrendingUp, x: "80%", y: "75%", delay: 0.9, size: 22 },
+  { Icon: Banknote, x: "10%", y: "70%", delay: 1.3, size: 24 },
+  { Icon: Wallet, x: "50%", y: "6%", delay: 0.7, size: 20 },
+  { Icon: ShieldCheck, x: "92%", y: "45%", delay: 1.1, size: 20 },
 ];
 
 const Welcome = () => {
@@ -59,7 +60,7 @@ const Welcome = () => {
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
           className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-success flex items-center justify-center mb-6 shadow-elevated"
         >
-          <Wallet className="w-8 h-8 md:w-10 md:h-10 text-success-foreground" />
+          <DollarSign className="w-8 h-8 md:w-10 md:h-10 text-success-foreground" />
         </motion.div>
 
         <motion.h1
@@ -83,7 +84,6 @@ const Welcome = () => {
           Get a comprehensive, AI-powered financial health check. Answer a few questions and receive personalised insights, scores, and action plans.
         </motion.p>
 
-        {/* How it works */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,7 +93,7 @@ const Welcome = () => {
           <h2 className="text-sm font-heading font-semibold text-muted-foreground text-center mb-6 uppercase tracking-wider">
             How it works
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {steps.map((s, i) => (
               <motion.div
                 key={i}
