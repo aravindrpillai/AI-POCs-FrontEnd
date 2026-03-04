@@ -1,42 +1,29 @@
 export type EmploymentStatus = "employed" | "self-employed" | "unemployed" | "retired";
-export type Gender = "male" | "female" | "other";
-export type IncomeStability = "fixed" | "variable";
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-
-export interface Goal {
-  label: string;
-  targetAmount: number;
-  timeframeMonths: number;
-}
+export type WizardStep = 1 | 2 | 3 | 4 | 5;
 
 export interface FinanceIntake {
   // Identity
-  name: string;
   age: number;
-  gender: Gender;
   location: string;
   employmentStatus: EmploymentStatus;
-  dependants: number;
 
   // Income
   primaryIncome: number;
   secondaryIncome: number;
-  incomeStability: IncomeStability;
 
-  // Fixed expenses
+  // Expenses — fixed
   rent: number;
-  loanEMIs: number;
   insurance: number;
   subscriptions: number;
+  totalOutstandingLoan: number;
 
-  // Variable & irregular expenses
+  // Expenses — variable
   groceries: number;
   transport: number;
   dining: number;
   entertainment: number;
-  annualBills: number;
-  schoolFees: number;
   medical: number;
+  schoolFees: number;
 
   // Assets
   savingsBalance: number;
@@ -44,24 +31,8 @@ export interface FinanceIntake {
   propertyValue: number;
   emergencyFund: number;
 
-  // Liabilities
-  creditCardBalance: number;
-  creditCardRate: number;
-  personalLoans: number;
-  carLoans: number;
-  studentLoans: number;
-  mortgageOutstanding: number;
-  bnplBalance: number;
-
-  // Goals
-  shortTermGoals: Goal[];
-  mediumTermGoals: Goal[];
-  longTermGoals: Goal[];
-
-  // Behaviour (optional)
-  savingsDipFrequency: string;
-  missedPayments: string;
-  spendingPattern: string;
+  // Goals (free-form)
+  goalSummary: string;
 }
 
 export interface FinanceScore {
@@ -69,7 +40,6 @@ export interface FinanceScore {
   debt: number;
   savings: number;
   spending: number;
-  goalProgress: number;
 }
 
 export interface Insight {
@@ -89,21 +59,40 @@ export const EMPLOYMENT_OPTIONS: { value: EmploymentStatus; label: string }[] = 
 export const STEP_TITLES: Record<WizardStep, string> = {
   1: "Identity & Demographics",
   2: "Income",
-  3: "Fixed Expenses",
-  4: "Variable & Irregular Expenses",
-  5: "Assets",
-  6: "Liabilities & Debts",
-  7: "Goals",
-  8: "Behaviour",
+  3: "Expenses",
+  4: "Assets",
+  5: "Your Goals",
 };
 
 export const defaultIntake: FinanceIntake = {
-  name: "", age: 30, gender: "male", location: "", employmentStatus: "employed", dependants: 0,
-  primaryIncome: 0, secondaryIncome: 0, incomeStability: "fixed",
-  rent: 0, loanEMIs: 0, insurance: 0, subscriptions: 0,
-  groceries: 0, transport: 0, dining: 0, entertainment: 0, annualBills: 0, schoolFees: 0, medical: 0,
+  age: 30, location: "", employmentStatus: "employed",
+  primaryIncome: 0, secondaryIncome: 0,
+  rent: 0, insurance: 0, subscriptions: 0, totalOutstandingLoan: 0,
+  groceries: 0, transport: 0, dining: 0, entertainment: 0, medical: 0, schoolFees: 0,
   savingsBalance: 0, investments: 0, propertyValue: 0, emergencyFund: 0,
-  creditCardBalance: 0, creditCardRate: 0, personalLoans: 0, carLoans: 0, studentLoans: 0, mortgageOutstanding: 0, bnplBalance: 0,
-  shortTermGoals: [], mediumTermGoals: [], longTermGoals: [],
-  savingsDipFrequency: "", missedPayments: "", spendingPattern: "",
+  goalSummary: "",
 };
+
+export const CITIES: string[] = [
+  "Abu Dhabi", "Accra", "Addis Ababa", "Ahmedabad", "Algiers", "Amman", "Amsterdam",
+  "Ankara", "Athens", "Atlanta", "Auckland", "Austin", "Baghdad", "Baku", "Baltimore",
+  "Bangalore", "Bangkok", "Barcelona", "Beijing", "Beirut", "Belgrade", "Berlin", "Bogotá",
+  "Boston", "Brisbane", "Brussels", "Bucharest", "Budapest", "Buenos Aires", "Cairo",
+  "Calgary", "Cape Town", "Casablanca", "Charlotte", "Chennai", "Chicago", "Colombo",
+  "Columbus", "Copenhagen", "Dallas", "Dar es Salaam", "Delhi", "Denver", "Detroit",
+  "Dhaka", "Doha", "Dubai", "Dublin", "Durban", "Düsseldorf", "Edinburgh", "Frankfurt",
+  "Geneva", "Glasgow", "Guangzhou", "Hamburg", "Hanoi", "Helsinki", "Ho Chi Minh City",
+  "Hong Kong", "Houston", "Hyderabad", "Indianapolis", "Istanbul", "Jacksonville",
+  "Jakarta", "Jeddah", "Johannesburg", "Karachi", "Kathmandu", "Kiev", "Kinshasa",
+  "Kolkata", "Kuala Lumpur", "Kuwait City", "Lagos", "Lahore", "Las Vegas", "Lima",
+  "Lisbon", "London", "Los Angeles", "Luanda", "Lusaka", "Luxembourg", "Lyon", "Madrid",
+  "Manchester", "Manila", "Marseille", "Mecca", "Medellín", "Melbourne", "Mexico City",
+  "Miami", "Milan", "Minneapolis", "Monterrey", "Montréal", "Moscow", "Mumbai", "Munich",
+  "Muscat", "Nairobi", "Nashville", "New York", "Osaka", "Oslo", "Ottawa", "Paris",
+  "Perth", "Philadelphia", "Phoenix", "Portland", "Prague", "Pune", "Quito", "Raleigh",
+  "Riyadh", "Rome", "Rotterdam", "Salt Lake City", "San Antonio", "San Diego",
+  "San Francisco", "San Jose", "Santiago", "São Paulo", "Seattle", "Seoul", "Shanghai",
+  "Shenzhen", "Singapore", "Sofia", "Stockholm", "Stuttgart", "Surabaya", "Sydney",
+  "Taipei", "Tampa", "Tehran", "Tel Aviv", "The Hague", "Tokyo", "Toronto", "Tunis",
+  "Vancouver", "Vienna", "Warsaw", "Washington DC", "Zurich",
+];
