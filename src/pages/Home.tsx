@@ -79,7 +79,7 @@ const Home = () => {
             transition={{ delay: 0.7, duration: 0.5 }}
             whileHover={{ scale: 1.03, y: -4 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/claim/new")}
+            onClick={() => navigate("/claims")}
             className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl bg-primary text-primary-foreground shadow-card overflow-hidden text-left"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/80 opacity-100" />
@@ -104,7 +104,7 @@ const Home = () => {
             transition={{ delay: 0.8, duration: 0.5 }}
             whileHover={{ scale: 1.03, y: -4 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate("/cv/uploadresume")}
+            onClick={() => navigate("/cv")}
             className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-border bg-card text-foreground shadow-card overflow-hidden text-left"
           >
             <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-accent/[0.06]" />

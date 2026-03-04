@@ -4,9 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
+import ClaimsWelcome from "./pages/claims/Welcome";
 import Index from "./pages/claims/Index";
 import NotFound from "./pages/NotFound";
 
+
+import CvWelcome from "./pages/cv/Welcome";
 import UploadResume from "./pages/cv/UploadResume";
 import SearchCandidates from "./pages/cv/SearchCandidates";
 import CandidateProfile from "./pages/cv/CandidateProfile";
@@ -27,9 +30,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/claims" element={<ClaimsWelcome />} />
           <Route path="/claim" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/:convId" element={<Index />} />
 
+          <Route path="/cv" element={<CvWelcome />} />
           <Route path="/cv/uploadresume" element={<UploadResume />} />
           <Route path="/cv/profile/:id" element={<CandidateProfile />} />
           <Route path="/cv/search" element={<SearchCandidates />} />
