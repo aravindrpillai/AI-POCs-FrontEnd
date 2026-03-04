@@ -10,6 +10,8 @@ import NotFound from "./pages/NotFound";
 import UploadResume from "./pages/cv/UploadResume";
 import SearchCandidates from "./pages/cv/SearchCandidates";
 import CandidateProfile from "./pages/cv/CandidateProfile";
+import MedAIWelcome from "./pages/med-ai/Welcome";
+import MedAIDiagnostics from "./pages/med-ai/Diagnostics";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,9 @@ const App = () => (
           <Route path="/cv/uploadresume" element={<UploadResume />} />
           <Route path="/cv/profile/:id" element={<CandidateProfile />} />
           <Route path="/cv/search" element={<SearchCandidates />} />
+
+          <Route path="/med-ai" element={<MedAIWelcome />} />
+          <Route path="/med-ai/diagnose" element={<MedAIDiagnostics />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
