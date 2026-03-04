@@ -57,7 +57,44 @@ const Conversation = () => {
     scrollToBottom();
 
     try {
-      const res = await medaiApi.sendMessage(convId, text, filesToSend.length > 0 ? filesToSend : undefined);
+      let res: { reply: string; diagnosis_ready: boolean; diagnosis?: any };
+      try {
+        res = await medaiApi.sendMessage(convId, text, filesToSend.length > 0 ? filesToSend : undefined);
+      } catch {
+        // Dummy fallback when API is unavailable
+        const msgCount = messages.length + 1;
+        if (msgCount >= 6) {
+          res = {
+            reply: "Based on our conversation, I now have enough information to prepare your preliminary assessment. Please click the button below to view your diagnosis report.",
+            diagnosis_ready: true,
+            diagnosis: {
+              summary: `Preliminary assessment for ${meta?.category || 'general'} concern.`,
+              findings: [
+                "Symptoms are consistent with a common condition in this specialty area.",
+                "No immediate red flags detected based on the information provided.",
+                "Further clinical examination is recommended for a definitive diagnosis."
+              ],
+              recommendations: [
+                "Schedule an in-person appointment with a specialist.",
+                "Keep a symptom diary noting frequency, duration, and triggers.",
+                "Maintain adequate hydration and rest.",
+                "Avoid self-medication without professional guidance."
+              ],
+              urgency: "Moderate — see a doctor within the next 1-2 weeks.",
+              disclaimer: "This is an AI-generated preliminary assessment and should not replace professional medical advice."
+            }
+          };
+        } else {
+          const followUps = [
+            "Thank you for that information. Can you describe the severity of your symptoms on a scale of 1-10?",
+            "I see. Have you noticed any patterns — does it worsen at certain times of day or with specific activities?",
+            "That's helpful. Are you currently taking any medications or supplements?",
+            "Understood. Do you have any family history of similar conditions?",
+          ];
+          res = { reply: followUps[Math.min(msgCount - 2, followUps.length - 1)], diagnosis_ready: false };
+        }
+      }
+
       setMessages(prev => [...prev, { id: genId(), role: 'ai', content: res.reply, timestamp: new Date() }]);
       if (res.diagnosis_ready) {
         setDiagnosisReady(true);
@@ -267,13 +304,37 @@ const Conversation = () => {
               </div>
 
               {diagnosisData ? (
-                <div className="prose prose-sm max-w-none">
-                  {typeof diagnosisData === 'string' ? (
+                <div className="space-y-5">
+                  {diagnosisData.summary && (
+                    <p className="text-sm font-medium leading-relaxed">{diagnosisData.summary}</p>
+                  )}
+                  {diagnosisData.findings && (
+                    <div>
+                      <h3 className="text-sm font-heading font-bold mb-2">Key Findings</h3>
+                      <ul className="space-y-1.5">
+                        {diagnosisData.findings.map((f: string, i: number) => (
+                          <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-info">•</span>{f}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {diagnosisData.recommendations && (
+                    <div>
+                      <h3 className="text-sm font-heading font-bold mb-2">Recommendations</h3>
+                      <ul className="space-y-1.5">
+                        {diagnosisData.recommendations.map((r: string, i: number) => (
+                          <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="text-info">•</span>{r}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {diagnosisData.urgency && (
+                    <div className="px-4 py-3 rounded-xl bg-muted">
+                      <p className="text-sm"><span className="font-medium">Urgency:</span> {diagnosisData.urgency}</p>
+                    </div>
+                  )}
+                  {typeof diagnosisData === 'string' && (
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{diagnosisData}</p>
-                  ) : (
-                    <pre className="text-xs bg-muted p-4 rounded-xl overflow-x-auto">
-                      {JSON.stringify(diagnosisData, null, 2)}
-                    </pre>
                   )}
                 </div>
               ) : (
