@@ -12,6 +12,7 @@ import SearchCandidates from "./pages/cv/SearchCandidates";
 import CandidateProfile from "./pages/cv/CandidateProfile";
 import MedAIWelcome from "./pages/med-ai/Welcome";
 import MedAIDiagnostics from "./pages/med-ai/Diagnostics";
+import MedAIConversation from "./pages/med-ai/Conversation";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
 
           <Route path="/med-ai" element={<MedAIWelcome />} />
           <Route path="/med-ai/diagnose" element={<MedAIDiagnostics />} />
+          <Route path="/med-ai/diagnose/:convId" element={<MedAIConversation />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

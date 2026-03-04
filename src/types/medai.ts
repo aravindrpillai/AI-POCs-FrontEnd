@@ -1,4 +1,4 @@
-export type MedCategory = 'orthopedics' | 'ophthalmology' | 'ent' | 'neurology' | 'cardiology' | 'dermatology' | 'gastroenterology' | 'general';
+export type MedCategory = 'orthopedics' | 'ophthalmology' | 'ent' | 'neurology' | 'cardiology' | 'dermatology' | 'gastroenterology' | 'pulmonology' | 'urology' | 'gynecology' | 'psychiatry' | 'oncology' | 'endocrinology' | 'rheumatology' | 'nephrology' | 'general';
 export type Gender = 'male' | 'female' | 'other';
 
 export interface PatientIntake {
@@ -34,7 +34,15 @@ export const CATEGORIES: { value: MedCategory; label: string; icon: string }[] =
   { value: 'ent', label: 'ENT', icon: '👂' },
   { value: 'neurology', label: 'Neurology', icon: '🧠' },
   { value: 'cardiology', label: 'Cardiology', icon: '❤️' },
-  { value: 'dermatology', label: 'Dermatology', icon: '🩺' },
-  { value: 'gastroenterology', label: 'Gastroenterology', icon: '🫁' },
+  { value: 'dermatology', label: 'Dermatology', icon: '🧴' },
+  { value: 'gastroenterology', label: 'Gastroenterology', icon: '🫄' },
+  { value: 'pulmonology', label: 'Pulmonology', icon: '🫁' },
+  { value: 'urology', label: 'Urology', icon: '🏥' },
+  { value: 'gynecology', label: 'Gynecology', icon: '🩷' },
+  { value: 'psychiatry', label: 'Psychiatry', icon: '🧘' },
+  { value: 'oncology', label: 'Oncology', icon: '🎗️' },
+  { value: 'endocrinology', label: 'Endocrinology', icon: '🦋' },
+  { value: 'rheumatology', label: 'Rheumatology', icon: '🦵' },
+  { value: 'nephrology', label: 'Nephrology', icon: '🫘' },
   { value: 'general', label: 'General Medicine', icon: '💊' },
 ];
