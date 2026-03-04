@@ -17,13 +17,8 @@ export interface FinanceIntake {
   subscriptions: number;
   totalOutstandingLoan: number;
 
-  // Expenses — variable
-  groceries: number;
-  transport: number;
-  dining: number;
-  entertainment: number;
-  medical: number;
-  schoolFees: number;
+  // Expenses — variable (total)
+  variableExpenses: number;
 
   // Assets
   savingsBalance: number;
@@ -68,7 +63,7 @@ export const defaultIntake: FinanceIntake = {
   age: 30, location: "", employmentStatus: "employed",
   primaryIncome: 0, secondaryIncome: 0,
   rent: 0, insurance: 0, subscriptions: 0, totalOutstandingLoan: 0,
-  groceries: 0, transport: 0, dining: 0, entertainment: 0, medical: 0, schoolFees: 0,
+  variableExpenses: 0,
   savingsBalance: 0, investments: 0, propertyValue: 0, emergencyFund: 0,
   goalSummary: "",
 };

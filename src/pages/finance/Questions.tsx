@@ -186,13 +186,8 @@ const Questions = () => {
           <h3 className="text-xs font-heading font-semibold text-info mb-3 flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-info" /> Variable Expenses
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {renderField("Groceries", "groceries", "300")}
-            {renderField("Transport", "transport", "100")}
-            {renderField("Dining Out", "dining", "150")}
-            {renderField("Entertainment", "entertainment", "100")}
-            {renderField("Medical", "medical", "0")}
-            {renderField("School Fees", "schoolFees", "0")}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {renderField("Total Variable Expenses (groceries, transport, dining, entertainment, medical, school fees)", "variableExpenses", "800")}
           </div>
         </div>
       </div>
