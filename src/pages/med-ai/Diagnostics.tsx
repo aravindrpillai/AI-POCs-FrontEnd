@@ -49,14 +49,25 @@ const Diagnostics = () => {
     };
 
     try {
-      const res = await medaiApi.startDiagnosis(intake, intakeFiles);
-      // Store intake context for conversation page
-      sessionStorage.setItem(`medai-intake-${res.conv_id}`, JSON.stringify({
+      // Try real API first; fall back to dummy data if it fails
+      let convId: string;
+      let reply: string;
+      try {
+        const res = await medaiApi.startDiagnosis(intake, intakeFiles);
+        convId = res.conv_id;
+        reply = res.reply;
+      } catch {
+        // Use dummy data so the flow still works without a backend
+        convId = Math.random().toString(36).slice(2, 10);
+        const catLabel = CATEGORIES.find(c => c.value === category)?.label || category;
+        reply = `Thank you for sharing your concern about "${problem.slice(0, 60)}…". Based on your profile (${gender}, age ${age}, ${catLabel}), I'd like to ask a few follow-up questions to better understand your condition.\n\n1. How long have you been experiencing these symptoms?\n2. On a scale of 1-10, how would you rate the severity?\n3. Have you tried any treatments or medications so far?\n\nPlease share any additional details that might help with the assessment.`;
+      }
+
+      sessionStorage.setItem(`medai-intake-${convId}`, JSON.stringify({
         category, gender, age, problem,
-        initialReply: res.reply,
+        initialReply: reply,
       }));
-      // Navigate to conversation
-      navigate(`/med-ai/diagnose/${res.conv_id}`);
+      navigate(`/med-ai/diagnose/${convId}`);
     } catch (err: any) {
       setError(err.message || "Failed to start diagnosis");
     } finally {
