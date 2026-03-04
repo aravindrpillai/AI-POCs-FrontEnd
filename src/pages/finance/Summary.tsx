@@ -19,7 +19,7 @@ const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, Mat
 function calcScores(d: FinanceIntake): FinanceScore {
   const totalIncome = d.primaryIncome + d.secondaryIncome;
   const totalFixedExp = d.rent + d.insurance + d.subscriptions;
-  const totalVarExp = d.groceries + d.transport + d.dining + d.entertainment + d.medical + d.schoolFees;
+  const totalVarExp = d.variableExpenses;
   const totalExpenses = totalFixedExp + totalVarExp;
 
   // Debt score: based on loan-to-income ratio
@@ -43,7 +43,7 @@ function generateInsights(d: FinanceIntake): Insight[] {
   const insights: Insight[] = [];
   const totalIncome = d.primaryIncome + d.secondaryIncome;
   const totalFixedExp = d.rent + d.insurance + d.subscriptions;
-  const totalVarExp = d.groceries + d.transport + d.dining + d.entertainment + d.medical + d.schoolFees;
+  const totalVarExp = d.variableExpenses;
   const totalExpenses = totalFixedExp + totalVarExp;
   const monthlySavings = totalIncome - totalExpenses;
   const emergencyMonths = totalExpenses > 0 ? d.emergencyFund / totalExpenses : 0;
@@ -116,7 +116,7 @@ const Summary = () => {
   const insights = generateInsights(data);
   const totalIncome = data.primaryIncome + data.secondaryIncome;
   const totalFixedExp = data.rent + data.insurance + data.subscriptions;
-  const totalVarExp = data.groceries + data.transport + data.dining + data.entertainment + data.medical + data.schoolFees;
+  const totalVarExp = data.variableExpenses;
   const totalExpenses = totalFixedExp + totalVarExp;
   const monthlySavings = Math.max(0, totalIncome - totalExpenses);
 
