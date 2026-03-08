@@ -21,6 +21,9 @@ import FinanceQuestions from "./pages/finance/Questions";
 import FinanceSummary from "./pages/finance/Summary";
 import OllamaWelcome from "./pages/ollama/Welcome";
 import OllamaChat from "./pages/ollama/Chat";
+import FileAnalyserWelcome from "./pages/file-analyser/Welcome";
+import FileAnalyserUpload from "./pages/file-analyser/Upload";
+import FileAnalyserChat from "./pages/file-analyser/Chat";
 
 const queryClient = new QueryClient();
 
