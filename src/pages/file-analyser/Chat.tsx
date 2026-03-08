@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Send, FileSearch, Bot, User, FileText, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { fetchConversation, sendMessage } from "@/services/fileAnalyserApi";
+import { fetchConversation, sendMessage } from "@/services/fileAnalyserAPI";
 
 interface ChatMessage {
   id: string;

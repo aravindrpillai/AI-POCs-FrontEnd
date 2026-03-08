@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
-import { uploadFiles } from "@/services/fileAnalyserApi";
+import { uploadFiles } from "@/services/fileAnalyserAPI";
 
 interface UploadedFile {
   file: File;
