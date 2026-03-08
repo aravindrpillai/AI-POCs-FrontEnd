@@ -1,77 +1,60 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send, FileSearch, Bot, User, FileText } from "lucide-react";
+import { ArrowLeft, Send, FileSearch, Bot, User, FileText, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { fetchConversation, sendMessage } from "@/services/fileAnalyserApi";
 
 interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-  references?: { page?: number; section?: string; file?: string }[];
+  references?: { file?: string; chunk?: number }[];
   timestamp: Date;
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-
-const dummyResponses: { answer: string; references: ChatMessage["references"] }[] = [
-  {
-    answer:
-      "Based on the uploaded documents, the main topic discussed is **data processing pipelines** and their role in modern software architecture. The document outlines three core stages: ingestion, transformation, and output.",
-    references: [
-      { page: 3, section: "Introduction", file: "document.pdf" },
-      { page: 7, section: "Architecture Overview", file: "document.pdf" },
-    ],
-  },
-  {
-    answer:
-      "The document mentions several key benefits:\n\n1. **Scalability** — horizontal scaling through partitioning\n2. **Fault tolerance** — automatic retry mechanisms\n3. **Real-time processing** — sub-second latency for streaming data\n\nThese are covered extensively in Chapter 4.",
-    references: [
-      { page: 12, section: "Chapter 4 - Benefits", file: "document.pdf" },
-      { page: 15, section: "4.3 Performance Metrics", file: "document.pdf" },
-    ],
-  },
-  {
-    answer:
-      "According to the uploaded file, the recommended approach is to use a **message queue** (such as RabbitMQ or Kafka) between the ingestion and transformation layers. This decouples the components and improves reliability.",
-    references: [
-      { page: 22, section: "5.2 Decoupling Strategies", file: "technical-guide.pdf" },
-    ],
-  },
-  {
-    answer:
-      "The document doesn't explicitly cover that topic. However, in the **appendix**, there's a brief mention of security considerations including:\n\n- Encryption at rest\n- TLS for data in transit\n- Role-based access control\n\nYou may want to consult the referenced external resources for more detail.",
-    references: [
-      { page: 45, section: "Appendix B - Security", file: "document.pdf" },
-    ],
-  },
-  {
-    answer:
-      "Great question! The comparison table on **page 30** shows the performance benchmarks across different configurations. The optimized setup achieved **3x throughput** compared to the baseline, with the tradeoff being slightly higher memory usage.",
-    references: [
-      { page: 30, section: "6.1 Benchmark Results", file: "document.pdf" },
-      { page: 31, section: "Table 6.2", file: "document.pdf" },
-    ],
-  },
-];
-
 const FileAnalyserChat = () => {
   const navigate = useNavigate();
-  const { sessionId } = useParams();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Your files have been vectorised and are ready for analysis. Ask me anything about the content — I'll provide answers with exact page references and citations.",
-      timestamp: new Date(),
-    },
-  ]);
+  const { sessionId } = useParams(); // conv_id
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  let responseIndex = useRef(0);
+
+  // Load chat history on mount
+  useEffect(() => {
+    if (!sessionId) return;
+    fetchConversation(sessionId)
+      .then((msgs) => {
+        if (msgs.length === 0) {
+          setMessages([{
+            id: "welcome",
+            role: "assistant",
+            content: "Your files have been analysed and are ready. Ask me anything about the content.",
+            timestamp: new Date(),
+          }]);
+        } else {
+          setMessages(msgs.map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            references: m.references ?? [],
+            timestamp: new Date(m.created_at),
+          })));
+        }
+      })
+      .catch(() => {
+        setMessages([{
+          id: "welcome",
+          role: "assistant",
+          content: "Your files are ready. Ask me anything about the content.",
+          timestamp: new Date(),
+        }]);
+      })
+      .finally(() => setIsLoadingHistory(false));
+  }, [sessionId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,7 +62,7 @@ const FileAnalyserChat = () => {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || isTyping) return;
+    if (!text || isTyping || !sessionId) return;
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -92,37 +75,25 @@ const FileAnalyserChat = () => {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsTyping(true);
 
-    // Try real API, fallback to dummy
     try {
-      const res = await fetch(`${BASE_URL}/file-analyser/chat/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, message: text }),
-      });
-      if (!res.ok) throw new Error("API error");
-      const data = await res.json();
+      const data = await sendMessage(sessionId, text);
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.answer || data.content || "I couldn't find relevant information.",
-          references: data.references || [],
+          content: data.answer,
+          references: data.references ?? [],
           timestamp: new Date(),
         },
       ]);
     } catch {
-      // Fallback
-      await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
-      const dummy = dummyResponses[responseIndex.current % dummyResponses.length];
-      responseIndex.current++;
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: dummy.answer,
-          references: dummy.references,
+          content: "Something went wrong. Please try again.",
           timestamp: new Date(),
         },
       ]);
@@ -144,6 +115,17 @@ const FileAnalyserChat = () => {
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   };
+
+  if (isLoadingHistory) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <p className="text-sm">Loading conversation...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -200,15 +182,11 @@ const FileAnalyserChat = () => {
                     📌 References
                   </p>
                   {msg.references.map((ref, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 text-[11px] text-muted-foreground"
-                    >
+                    <div key={i} className="flex items-center gap-2 text-[11px] text-muted-foreground">
                       <FileText className="w-3 h-3 flex-shrink-0" />
                       <span>
                         {ref.file && <span className="font-medium">{ref.file}</span>}
-                        {ref.page && <span> — Page {ref.page}</span>}
-                        {ref.section && <span> — {ref.section}</span>}
+                        {ref.chunk !== undefined && <span> — Chunk {ref.chunk + 1}</span>}
                       </span>
                     </div>
                   ))}

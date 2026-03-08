@@ -1,19 +1,18 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload as UploadIcon, FileText, X, CheckCircle } from "lucide-react";
+import { ArrowLeft, Upload as UploadIcon, FileText, X, CheckCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
+import { uploadFiles } from "@/services/fileAnalyserApi";
 
 interface UploadedFile {
   file: File;
   id: string;
+  status: "pending" | "uploading" | "vectorising" | "done" | "error";
   progress: number;
-  status: "pending" | "uploading" | "done" | "error";
 }
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 const formatSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -25,16 +24,16 @@ const FileAnalyserUpload = () => {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [allDone, setAllDone] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [stage, setStage] = useState<"idle" | "uploading" | "vectorising" | "done">("idle");
 
   const addFiles = (incoming: FileList | null) => {
     if (!incoming) return;
     const newFiles: UploadedFile[] = Array.from(incoming).map((f) => ({
       file: f,
       id: crypto.randomUUID(),
-      progress: 0,
       status: "pending",
+      progress: 0,
     }));
     setFiles((prev) => [...prev, ...newFiles]);
   };
@@ -48,42 +47,48 @@ const FileAnalyserUpload = () => {
     addFiles(e.dataTransfer.files);
   };
 
-  const simulateUpload = async () => {
+  const handleUpload = async () => {
     if (files.length === 0) {
       toast({ title: "No files selected", description: "Please add at least one file.", variant: "destructive" });
       return;
     }
 
-    setIsUploading(true);
+    // Stage 1: Uploading
+    setStage("uploading");
+    setUploadProgress(0);
+    setFiles((prev) => prev.map((f) => ({ ...f, status: "uploading", progress: 0 })));
 
-    for (let i = 0; i < files.length; i++) {
-      const fileId = files[i].id;
-      setFiles((prev) =>
-        prev.map((f) => (f.id === fileId ? { ...f, status: "uploading" } : f))
+    try {
+      const response = await uploadFiles(
+        files.map((f) => f.file),
+        (progress) => {
+          setUploadProgress(progress);
+          setFiles((prev) => prev.map((f) => ({ ...f, progress })));
+
+          // At 100% upload, switch to vectorising
+          if (progress === 100) {
+            setStage("vectorising");
+            setFiles((prev) => prev.map((f) => ({ ...f, status: "vectorising" })));
+          }
+        }
       );
 
-      // Simulate upload with progress
-      for (let p = 0; p <= 100; p += 10) {
-        await new Promise((r) => setTimeout(r, 80 + Math.random() * 120));
-        setFiles((prev) =>
-          prev.map((f) => (f.id === fileId ? { ...f, progress: p } : f))
-        );
-      }
+      // API responded — done
+      setStage("done");
+      setFiles((prev) => prev.map((f) => ({ ...f, status: "done" })));
 
-      setFiles((prev) =>
-        prev.map((f) => (f.id === fileId ? { ...f, status: "done", progress: 100 } : f))
-      );
+      setTimeout(() => {
+        navigate(`/file-analyser/chat/${response.conv_id}`);
+      }, 800);
+
+    } catch (error: any) {
+      setStage("idle");
+      setFiles((prev) => prev.map((f) => ({ ...f, status: "error" })));
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
     }
-
-    setIsUploading(false);
-    setAllDone(true);
-
-    // Navigate to chat after a brief pause
-    setTimeout(() => {
-      const sessionId = crypto.randomUUID().slice(0, 8);
-      navigate(`/file-analyser/chat/${sessionId}`);
-    }, 1200);
   };
+
+  const isBusy = stage !== "idle";
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
@@ -122,8 +127,10 @@ const FileAnalyserUpload = () => {
           transition={{ delay: 0.25 }}
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          onClick={() => inputRef.current?.click()}
-          className="w-full border-2 border-dashed border-border hover:border-accent rounded-2xl p-10 flex flex-col items-center gap-3 cursor-pointer bg-card/60 transition-colors mb-6"
+          onClick={() => !isBusy && inputRef.current?.click()}
+          className={`w-full border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 bg-card/60 transition-colors mb-6 ${
+            isBusy ? "opacity-50 cursor-not-allowed border-border" : "cursor-pointer hover:border-accent border-border"
+          }`}
         >
           <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
             <UploadIcon className="w-6 h-6 text-accent" />
@@ -132,14 +139,46 @@ const FileAnalyserUpload = () => {
             Drag & drop files here or <span className="text-accent">browse</span>
           </p>
           <p className="text-xs text-muted-foreground">Any file type supported</p>
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => addFiles(e.target.files)}
-          />
+          <input ref={inputRef} type="file" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
         </motion.div>
+
+        {/* Upload progress bar — hidden once we hit 100% */}
+        <AnimatePresence>
+          {stage === "uploading" && uploadProgress < 100 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="w-full mb-4"
+            >
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>Uploading files...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Vectorising indicator */}
+        <AnimatePresence>
+          {stage === "vectorising" && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="w-full mb-4 flex items-center gap-3 p-4 rounded-xl border border-accent/30 bg-accent/5"
+            >
+              <div className="relative flex-shrink-0">
+                <Loader2 className="w-5 h-5 text-accent animate-spin" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Vectorising documents</p>
+                <p className="text-xs text-muted-foreground">Analysing and indexing your files, this may take a moment...</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* File list */}
         <AnimatePresence>
@@ -159,7 +198,9 @@ const FileAnalyserUpload = () => {
                 >
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     {f.status === "done" ? (
-                      <CheckCircle className="w-4 h-4 text-success" />
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : f.status === "vectorising" ? (
+                      <Loader2 className="w-4 h-4 text-accent animate-spin" />
                     ) : (
                       <FileText className="w-4 h-4 text-primary" />
                     )}
@@ -167,17 +208,26 @@ const FileAnalyserUpload = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{f.file.name}</p>
                     <p className="text-[11px] text-muted-foreground">{formatSize(f.file.size)}</p>
-                    {f.status === "uploading" && (
+                    {f.status === "uploading" && f.progress < 100 && (
                       <Progress value={f.progress} className="h-1.5 mt-1" />
                     )}
                   </div>
-                  {f.status === "pending" && !isUploading && (
+                  {f.status === "pending" && (
                     <button onClick={(e) => { e.stopPropagation(); removeFile(f.id); }} className="text-muted-foreground hover:text-destructive transition-colors">
                       <X className="w-4 h-4" />
                     </button>
                   )}
+                  {f.status === "uploading" && (
+                    <span className="text-[11px] text-accent font-medium">{f.progress}%</span>
+                  )}
+                  {f.status === "vectorising" && (
+                    <span className="text-[11px] text-accent font-medium">Vectorising</span>
+                  )}
                   {f.status === "done" && (
-                    <span className="text-[11px] text-success font-medium">Done</span>
+                    <span className="text-[11px] text-green-500 font-medium">Done</span>
+                  )}
+                  {f.status === "error" && (
+                    <span className="text-[11px] text-destructive font-medium">Failed</span>
                   )}
                 </motion.div>
               ))}
@@ -189,15 +239,17 @@ const FileAnalyserUpload = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
           <Button
             size="lg"
-            onClick={simulateUpload}
-            disabled={files.length === 0 || isUploading || allDone}
+            onClick={handleUpload}
+            disabled={files.length === 0 || isBusy}
             className="rounded-xl px-8 gap-2 shadow-elevated"
           >
-            {isUploading
-              ? "Uploading..."
-              : allDone
-                ? "Redirecting..."
-                : `Upload ${files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""}` : ""}`}
+            {stage === "uploading"
+              ? `Uploading... ${uploadProgress}%`
+              : stage === "vectorising"
+                ? "Vectorising..."
+                : stage === "done"
+                  ? "Redirecting..."
+                  : `Upload ${files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""}` : ""}`}
           </Button>
         </motion.div>
       </div>
