@@ -170,6 +170,30 @@ const Home = () => {
             </div>
           </motion.button>
 
+          <motion.button
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1, duration: 0.5 }}
+            whileHover={{ scale: 1.03, y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/file-analyser")}
+            className="group relative flex flex-col items-start gap-4 p-6 rounded-2xl border border-border bg-card text-foreground shadow-card overflow-hidden text-left"
+          >
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-info/[0.08]" />
+            <div className="relative">
+              <div className="w-11 h-11 rounded-xl bg-info/10 flex items-center justify-center mb-1">
+                <FileSearch className="w-5 h-5 text-info" />
+              </div>
+              <h2 className="text-lg font-heading font-bold">File Analyser</h2>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Upload documents & ask AI questions with page references
+              </p>
+            </div>
+            <div className="relative flex items-center gap-1.5 text-xs font-medium text-info mt-auto opacity-70 group-hover:opacity-100 transition-opacity">
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </motion.button>
+
           {/* <motion.button
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
