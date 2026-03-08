@@ -57,6 +57,10 @@ const App = () => (
           <Route path="/ollama" element={<OllamaWelcome />} />
           <Route path="/ollama/chat" element={<OllamaChat />} />
 
+          <Route path="/file-analyser" element={<FileAnalyserWelcome />} />
+          <Route path="/file-analyser/upload" element={<FileAnalyserUpload />} />
+          <Route path="/file-analyser/chat/:sessionId" element={<FileAnalyserChat />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
