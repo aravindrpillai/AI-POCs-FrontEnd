@@ -42,7 +42,7 @@ export const uploadFiles = (
 
     xhr.addEventListener("error", () => reject(new Error("Network error during upload.")));
 
-    xhr.open("POST", `${BASE_URL}/ai/files/filehandler`);
+    xhr.open("POST", `${BASE_URL}/ai/files/filehandler/`);
     xhr.send(formData);
   });
 };
