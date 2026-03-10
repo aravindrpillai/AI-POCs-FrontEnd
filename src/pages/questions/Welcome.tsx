@@ -3,7 +3,7 @@ import { BookOpen, FileJson, Upload, ArrowRight, Brain, Sparkles, Zap, FileUp } 
 import { motion } from "framer-motion";
 import { useRef, useState } from "react";
 
-const floatingIcons = [
+const floatingIcons =[
   { Icon: Brain, x: "12%", y: "18%", delay: 0, size: 20 },
   { Icon: Sparkles, x: "82%", y: "12%", delay: 0.6, size: 22 },
   { Icon: Zap, x: "78%", y: "72%", delay: 1.2, size: 18 },
