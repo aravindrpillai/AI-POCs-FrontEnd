@@ -144,11 +144,11 @@ const Quiz = () => {
 
   const resetAll = () => {
     setQuestions((prev) => {
-      const next = prev.map((q) => ({ ...q, attended: false, flagged: false }));
+      const next = prev.map((q) => ({ ...q, attended: false, flagged: false, userAnswer: undefined }));
       sessionStorage.setItem("exam-questions", JSON.stringify(next));
       return next;
     });
-    setCurrentIdx(0); setSelected([]); setRevealed(false); setShowFlaggedOnly(false); setEditing(false);
+    setCurrentIdx(0); setSelected([]); setRevealed(false); setShowFlaggedOnly(false); setHideAttended(false); setEditing(false);
   };
 
   const downloadJson = () => {
