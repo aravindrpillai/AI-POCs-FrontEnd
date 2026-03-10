@@ -466,7 +466,7 @@ const Quiz = () => {
                             )}>
                               {opt.id}
                             </span>
-                            <span className="flex-1 pt-0.5">{opt.option}</span>
+                            <span className="flex-1 pt-0.5 whitespace-pre-wrap break-words">{opt.option}</span>
                             {isRight && <Check className="w-4 h-4 text-success shrink-0 mt-1" />}
                           </button>
                         );
