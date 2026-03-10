@@ -248,7 +248,8 @@ const Quiz = () => {
           >
             <span className="shrink-0 w-5 text-center font-mono">{idx + 1}</span>
             <span className="truncate flex-1">{q.question.substring(0, 50)}{q.question.length > 50 ? "…" : ""}</span>
-            {q.attended && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
+            {q.attended && q.userAnswer && q.answer.length === q.userAnswer.length && q.answer.every((a) => q.userAnswer!.includes(a)) && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
+            {q.attended && q.userAnswer && !(q.answer.length === q.userAnswer.length && q.answer.every((a) => q.userAnswer!.includes(a))) && <X className="w-3.5 h-3.5 text-destructive shrink-0" />}
             {q.flagged && <Flag className="w-3.5 h-3.5 text-accent shrink-0 fill-accent" />}
           </button>
         ))}
