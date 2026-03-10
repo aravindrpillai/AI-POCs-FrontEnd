@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { RotateCcw, Flag, Download, Upload, Check, ChevronRight, ChevronLeft, BookOpen, Eye, FlagOff, Pencil, Save, X, Menu } from "lucide-react";
+import { RotateCcw, Flag, Download, Upload, Check, ChevronRight, ChevronLeft, BookOpen, Eye, FlagOff, Pencil, Save, X, Menu, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -17,6 +17,7 @@ interface Question {
   flagged: boolean;
   options: Option[];
   answer: string[];
+  userAnswer?: string[];
 }
 
 /* Fisher-Yates shuffle */
@@ -37,6 +38,7 @@ const Quiz = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+  const [hideAttended, setHideAttended] = useState(false);
   const [editing, setEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -54,7 +56,9 @@ const Quiz = () => {
   }, [navigate]);
 
   const displayList = useMemo(() => {
-    let list = showFlaggedOnly ? questions.filter((q) => q.flagged) : questions;
+    let list = questions;
+    if (showFlaggedOnly) list = list.filter((q) => q.flagged);
+    if (hideAttended) list = list.filter((q) => !q.attended);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -64,7 +68,7 @@ const Quiz = () => {
       );
     }
     return list;
-  }, [questions, showFlaggedOnly, searchQuery]);
+  }, [questions, showFlaggedOnly, hideAttended, searchQuery]);
 
   const current = displayList[currentIdx] || null;
 
@@ -99,26 +103,37 @@ const Quiz = () => {
   const handleReveal = () => {
     if (!current) return;
     setRevealed(true);
-    updateQuestion(current.id, { attended: true });
+    updateQuestion(current.id, { attended: true, userAnswer: [...selected] });
   };
 
   const handleNext = () => {
     if (currentIdx < displayList.length - 1) {
       setCurrentIdx((i) => i + 1);
-      setSelected([]); setRevealed(false); setEditing(false);
+      setEditing(false);
     }
   };
 
   const handlePrev = () => {
     if (currentIdx > 0) {
       setCurrentIdx((i) => i - 1);
-      setSelected([]); setRevealed(false); setEditing(false);
+      setEditing(false);
     }
   };
 
+  // Restore user answers when navigating to a previously answered question
+  useEffect(() => {
+    if (current?.attended && current.userAnswer?.length) {
+      setSelected(current.userAnswer);
+      setRevealed(true);
+    } else {
+      setSelected([]);
+      setRevealed(false);
+    }
+  }, [current?.id]);
+
   const goTo = (idx: number) => {
     setCurrentIdx(idx);
-    setSelected([]); setRevealed(false); setEditing(false);
+    setEditing(false);
     setDrawerOpen(false);
   };
 
@@ -129,11 +144,11 @@ const Quiz = () => {
 
   const resetAll = () => {
     setQuestions((prev) => {
-      const next = prev.map((q) => ({ ...q, attended: false, flagged: false }));
+      const next = prev.map((q) => ({ ...q, attended: false, flagged: false, userAnswer: undefined }));
       sessionStorage.setItem("exam-questions", JSON.stringify(next));
       return next;
     });
-    setCurrentIdx(0); setSelected([]); setRevealed(false); setShowFlaggedOnly(false); setEditing(false);
+    setCurrentIdx(0); setSelected([]); setRevealed(false); setShowFlaggedOnly(false); setHideAttended(false); setEditing(false);
   };
 
   const downloadJson = () => {
@@ -199,6 +214,9 @@ const Quiz = () => {
   if (!questions.length) return null;
 
   const attendedCount = questions.filter((q) => q.attended).length;
+  const correctCount = questions.filter((q) => q.attended && q.userAnswer && q.userAnswer.length > 0 && q.answer.length === q.userAnswer.length && q.answer.every((a) => q.userAnswer!.includes(a))).length;
+  const incorrectCount = attendedCount - correctCount;
+  const unattendedCount = questions.length - attendedCount;
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -230,7 +248,8 @@ const Quiz = () => {
           >
             <span className="shrink-0 w-5 text-center font-mono">{idx + 1}</span>
             <span className="truncate flex-1">{q.question.substring(0, 50)}{q.question.length > 50 ? "…" : ""}</span>
-            {q.attended && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
+            {q.attended && q.userAnswer && q.answer.length === q.userAnswer.length && q.answer.every((a) => q.userAnswer!.includes(a)) && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
+            {q.attended && q.userAnswer && !(q.answer.length === q.userAnswer.length && q.answer.every((a) => q.userAnswer!.includes(a))) && <X className="w-3.5 h-3.5 text-destructive shrink-0" />}
             {q.flagged && <Flag className="w-3.5 h-3.5 text-accent shrink-0 fill-accent" />}
           </button>
         ))}
@@ -279,10 +298,19 @@ const Quiz = () => {
           <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors">
             <Save className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Save State</span>
           </button>
+          <button onClick={() => { setHideAttended((v) => !v); setCurrentIdx(0); setEditing(false); }} className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors",
+            hideAttended ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-foreground hover:bg-muted"
+          )}>
+            <EyeOff className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{hideAttended ? "Show All" : "Hide Attended"}</span>
+          </button>
           <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleUpload} />
 
-          <div className="ml-auto text-xs text-muted-foreground">
-            {currentIdx + 1} / {displayList.length}
+          <div className="ml-auto flex items-center gap-3 text-xs">
+            <span className="text-success font-medium">✓ {correctCount}</span>
+            <span className="text-destructive font-medium">✗ {incorrectCount}</span>
+            <span className="text-muted-foreground">{unattendedCount} left</span>
+            <span className="text-muted-foreground border-l border-border pl-3">{currentIdx + 1}/{displayList.length}</span>
           </div>
         </header>
 
