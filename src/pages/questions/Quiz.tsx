@@ -38,6 +38,7 @@ const Quiz = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+  const [hideAttended, setHideAttended] = useState(false);
   const [editing, setEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
