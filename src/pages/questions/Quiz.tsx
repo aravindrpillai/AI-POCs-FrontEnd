@@ -52,10 +52,18 @@ const Quiz = () => {
     } catch { navigate("/questions"); }
   }, [navigate]);
 
-  const displayList = useMemo(
-    () => (showFlaggedOnly ? questions.filter((q) => q.flagged) : questions),
-    [questions, showFlaggedOnly]
-  );
+  const displayList = useMemo(() => {
+    let list = showFlaggedOnly ? questions.filter((q) => q.flagged) : questions;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (item) =>
+          item.question.toLowerCase().includes(q) ||
+          item.options.some((o) => o.option.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [questions, showFlaggedOnly, searchQuery]);
 
   const current = displayList[currentIdx] || null;
 
