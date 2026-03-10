@@ -134,6 +134,7 @@ const Welcome = () => {
         </motion.div>
 
         <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleFileLoad} />
+        <input ref={docFileRef} type="file" accept=".doc,.docx,.pdf,.txt" className="hidden" onChange={handleDocUpload} />
 
         <motion.button
           initial={{ opacity: 0 }}
