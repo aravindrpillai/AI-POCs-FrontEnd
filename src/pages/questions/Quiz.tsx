@@ -17,6 +17,7 @@ interface Question {
   flagged: boolean;
   options: Option[];
   answer: string[];
+  userAnswer?: string[];
 }
 
 /* Fisher-Yates shuffle */
