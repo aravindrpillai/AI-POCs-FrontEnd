@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, FileJson, Upload, ArrowRight, Brain, Sparkles, Zap } from "lucide-react";
+import { BookOpen, FileJson, Upload, ArrowRight, Brain, Sparkles, Zap, FileUp } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const floatingIcons = [
   { Icon: Brain, x: "12%", y: "18%", delay: 0, size: 20 },
@@ -13,6 +13,10 @@ const floatingIcons = [
 const Welcome = () => {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const docFileRef = useRef<HTMLInputElement>(null);
+  const [docUploaded, setDocUploaded] = useState(false);
+  const [docFileName, setDocFileName] = useState("");
 
   const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,6 +34,13 @@ const Welcome = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleDocUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocFileName(file.name);
+    setDocUploaded(true);
   };
 
   return (
@@ -84,7 +95,7 @@ const Welcome = () => {
           className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg"
         >
           <button
-            onClick={() => window.open("https://chatgpt.com", "_blank")}
+            onClick={() => docFileRef.current?.click()}
             className="group flex flex-col items-start gap-3 p-6 rounded-2xl border border-border bg-card text-foreground shadow-sm hover:shadow-md transition-all text-left"
           >
             <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -92,11 +103,17 @@ const Welcome = () => {
             </div>
             <div>
               <h3 className="text-sm font-heading font-bold">Convert Doc to JSON</h3>
-              <p className="text-xs text-muted-foreground mt-1">Use ChatGPT to convert your document into the required JSON format</p>
+              <p className="text-xs text-muted-foreground mt-1">Upload a DOC, PDF, or TXT file to convert into the required JSON format</p>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-accent opacity-70 group-hover:opacity-100 transition-opacity mt-auto">
-              Open ChatGPT <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
+            {docUploaded ? (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-success mt-auto">
+                <FileUp className="w-3.5 h-3.5" /> {docFileName}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-accent opacity-70 group-hover:opacity-100 transition-opacity mt-auto">
+                Upload file <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            )}
           </button>
 
           <button
@@ -117,6 +134,7 @@ const Welcome = () => {
         </motion.div>
 
         <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleFileLoad} />
+        <input ref={docFileRef} type="file" accept=".doc,.docx,.pdf,.txt" className="hidden" onChange={handleDocUpload} />
 
         <motion.button
           initial={{ opacity: 0 }}

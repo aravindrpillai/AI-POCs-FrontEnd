@@ -39,6 +39,7 @@ const Quiz = () => {
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
   const [editing, setEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editQuestion, setEditQuestion] = useState("");
   const [editOptions, setEditOptions] = useState<Option[]>([]);
   const [editAnswers, setEditAnswers] = useState<string[]>([]);
@@ -118,6 +119,7 @@ const Quiz = () => {
   const goTo = (idx: number) => {
     setCurrentIdx(idx);
     setSelected([]); setRevealed(false); setEditing(false);
+    setDrawerOpen(false);
   };
 
   const toggleFlag = () => {
@@ -248,7 +250,7 @@ const Quiz = () => {
         {/* Toolbar */}
         <header className="flex items-center gap-2 p-3 border-b border-border bg-card flex-wrap">
           {/* Mobile drawer trigger */}
-          <Sheet>
+          <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
             <SheetTrigger asChild>
               <button className="md:hidden inline-flex items-center justify-center w-8 h-8 rounded-lg border border-border bg-background text-foreground hover:bg-muted transition-colors">
                 <Menu className="w-4 h-4" />
