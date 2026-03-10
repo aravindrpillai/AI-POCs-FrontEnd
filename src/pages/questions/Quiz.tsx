@@ -297,10 +297,19 @@ const Quiz = () => {
           <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors">
             <Save className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Save State</span>
           </button>
+          <button onClick={() => { setHideAttended((v) => !v); setCurrentIdx(0); setEditing(false); }} className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors",
+            hideAttended ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-foreground hover:bg-muted"
+          )}>
+            <EyeOff className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{hideAttended ? "Show All" : "Hide Attended"}</span>
+          </button>
           <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleUpload} />
 
-          <div className="ml-auto text-xs text-muted-foreground">
-            {currentIdx + 1} / {displayList.length}
+          <div className="ml-auto flex items-center gap-3 text-xs">
+            <span className="text-success font-medium">✓ {correctCount}</span>
+            <span className="text-destructive font-medium">✗ {incorrectCount}</span>
+            <span className="text-muted-foreground">{unattendedCount} left</span>
+            <span className="text-muted-foreground border-l border-border pl-3">{currentIdx + 1}/{displayList.length}</span>
           </div>
         </header>
 
