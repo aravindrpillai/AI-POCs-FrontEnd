@@ -56,7 +56,9 @@ const Quiz = () => {
   }, [navigate]);
 
   const displayList = useMemo(() => {
-    let list = showFlaggedOnly ? questions.filter((q) => q.flagged) : questions;
+    let list = questions;
+    if (showFlaggedOnly) list = list.filter((q) => q.flagged);
+    if (hideAttended) list = list.filter((q) => !q.attended);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -66,7 +68,7 @@ const Quiz = () => {
       );
     }
     return list;
-  }, [questions, showFlaggedOnly, searchQuery]);
+  }, [questions, showFlaggedOnly, hideAttended, searchQuery]);
 
   const current = displayList[currentIdx] || null;
 
