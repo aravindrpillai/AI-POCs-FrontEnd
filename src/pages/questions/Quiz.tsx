@@ -189,6 +189,37 @@ const Quiz = () => {
 
   const attendedCount = questions.filter((q) => q.attended).length;
 
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b border-border">
+        <button onClick={() => navigate("/questions")} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          ← Back
+        </button>
+        <h2 className="text-sm font-heading font-bold text-foreground mt-2">Questions</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          {attendedCount}/{questions.length} attended
+        </p>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+        {displayList.map((q, idx) => (
+          <button
+            key={q.id}
+            onClick={() => goTo(idx)}
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-xs transition-colors",
+              idx === currentIdx ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted"
+            )}
+          >
+            <span className="shrink-0 w-5 text-center font-mono">{idx + 1}</span>
+            <span className="truncate flex-1">Q{q.id}</span>
+            {q.attended && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
+            {q.flagged && <Flag className="w-3.5 h-3.5 text-accent shrink-0 fill-accent" />}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
