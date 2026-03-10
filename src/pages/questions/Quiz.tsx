@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { RotateCcw, Flag, Download, Upload, Check, ChevronRight, ChevronLeft, BookOpen, Eye, FlagOff, Pencil, Save, X } from "lucide-react";
+import { RotateCcw, Flag, Download, Upload, Check, ChevronRight, ChevronLeft, BookOpen, Eye, FlagOff, Pencil, Save, X, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface Option {
   id: string;
