@@ -63,6 +63,9 @@ const App = () => (
           <Route path="/file-analyser/upload" element={<FileAnalyserUpload />} />
           <Route path="/file-analyser/chat/:sessionId" element={<FileAnalyserChat />} />
 
+          <Route path="/questions" element={<QuestionsWelcome />} />
+          <Route path="/questions/quiz" element={<QuestionsQuiz />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
