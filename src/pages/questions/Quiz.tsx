@@ -133,7 +133,7 @@ const Quiz = () => {
 
   const goTo = (idx: number) => {
     setCurrentIdx(idx);
-    setSelected([]); setRevealed(false); setEditing(false);
+    setEditing(false);
     setDrawerOpen(false);
   };
 
