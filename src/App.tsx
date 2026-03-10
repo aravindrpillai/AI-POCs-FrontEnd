@@ -24,6 +24,8 @@ import OllamaChat from "./pages/ollama/Chat";
 import FileAnalyserWelcome from "./pages/file-analyser/Welcome";
 import FileAnalyserUpload from "./pages/file-analyser/Upload";
 import FileAnalyserChat from "./pages/file-analyser/Chat";
+import QuestionsWelcome from "./pages/questions/Welcome";
+import QuestionsQuiz from "./pages/questions/Quiz";
 
 const queryClient = new QueryClient();
 
