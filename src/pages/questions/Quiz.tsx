@@ -214,6 +214,9 @@ const Quiz = () => {
   if (!questions.length) return null;
 
   const attendedCount = questions.filter((q) => q.attended).length;
+  const correctCount = questions.filter((q) => q.attended && q.userAnswer && q.userAnswer.length > 0 && q.answer.length === q.userAnswer.length && q.answer.every((a) => q.userAnswer!.includes(a))).length;
+  const incorrectCount = attendedCount - correctCount;
+  const unattendedCount = questions.length - attendedCount;
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
