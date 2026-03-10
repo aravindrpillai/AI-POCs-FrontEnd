@@ -14,6 +14,10 @@ const Welcome = () => {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const docFileRef = useRef<HTMLInputElement>(null);
+  const [docUploaded, setDocUploaded] = useState(false);
+  const [docFileName, setDocFileName] = useState("");
+
   const handleFileLoad = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -30,6 +34,13 @@ const Welcome = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleDocUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocFileName(file.name);
+    setDocUploaded(true);
   };
 
   return (
