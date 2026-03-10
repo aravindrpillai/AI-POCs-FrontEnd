@@ -119,6 +119,7 @@ const Quiz = () => {
   const goTo = (idx: number) => {
     setCurrentIdx(idx);
     setSelected([]); setRevealed(false); setEditing(false);
+    setDrawerOpen(false);
   };
 
   const toggleFlag = () => {
