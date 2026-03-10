@@ -407,7 +407,7 @@ const Quiz = () => {
                             Select {current.answer.length}
                           </span>
                         )}
-                        <h2 className="text-base md:text-lg font-heading font-bold text-foreground mt-1 leading-snug">
+                        <h2 className="text-base md:text-lg font-heading font-bold text-foreground mt-1 leading-snug whitespace-pre-wrap break-words">
                           {current.question}
                         </h2>
                       </div>
