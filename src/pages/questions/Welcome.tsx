@@ -95,7 +95,7 @@ const Welcome = () => {
           className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg"
         >
           <button
-            onClick={() => window.open("https://chatgpt.com", "_blank")}
+            onClick={() => docFileRef.current?.click()}
             className="group flex flex-col items-start gap-3 p-6 rounded-2xl border border-border bg-card text-foreground shadow-sm hover:shadow-md transition-all text-left"
           >
             <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -103,11 +103,17 @@ const Welcome = () => {
             </div>
             <div>
               <h3 className="text-sm font-heading font-bold">Convert Doc to JSON</h3>
-              <p className="text-xs text-muted-foreground mt-1">Use ChatGPT to convert your document into the required JSON format</p>
+              <p className="text-xs text-muted-foreground mt-1">Upload a DOC, PDF, or TXT file to convert into the required JSON format</p>
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-accent opacity-70 group-hover:opacity-100 transition-opacity mt-auto">
-              Open ChatGPT <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
+            {docUploaded ? (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-success mt-auto">
+                <FileUp className="w-3.5 h-3.5" /> {docFileName}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-accent opacity-70 group-hover:opacity-100 transition-opacity mt-auto">
+                Upload file <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            )}
           </button>
 
           <button
