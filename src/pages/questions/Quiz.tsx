@@ -39,6 +39,7 @@ const Quiz = () => {
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
   const [editing, setEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editQuestion, setEditQuestion] = useState("");
   const [editOptions, setEditOptions] = useState<Option[]>([]);
   const [editAnswers, setEditAnswers] = useState<string[]>([]);
