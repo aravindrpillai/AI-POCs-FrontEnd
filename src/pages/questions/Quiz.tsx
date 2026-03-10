@@ -109,16 +109,27 @@ const Quiz = () => {
   const handleNext = () => {
     if (currentIdx < displayList.length - 1) {
       setCurrentIdx((i) => i + 1);
-      setSelected([]); setRevealed(false); setEditing(false);
+      setEditing(false);
     }
   };
 
   const handlePrev = () => {
     if (currentIdx > 0) {
       setCurrentIdx((i) => i - 1);
-      setSelected([]); setRevealed(false); setEditing(false);
+      setEditing(false);
     }
   };
+
+  // Restore user answers when navigating to a previously answered question
+  useEffect(() => {
+    if (current?.attended && current.userAnswer?.length) {
+      setSelected(current.userAnswer);
+      setRevealed(true);
+    } else {
+      setSelected([]);
+      setRevealed(false);
+    }
+  }, [current?.id]);
 
   const goTo = (idx: number) => {
     setCurrentIdx(idx);
