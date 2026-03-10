@@ -38,6 +38,7 @@ const Quiz = () => {
   const [revealed, setRevealed] = useState(false);
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editQuestion, setEditQuestion] = useState("");
   const [editOptions, setEditOptions] = useState<Option[]>([]);
   const [editAnswers, setEditAnswers] = useState<string[]>([]);
@@ -51,10 +52,18 @@ const Quiz = () => {
     } catch { navigate("/questions"); }
   }, [navigate]);
 
-  const displayList = useMemo(
-    () => (showFlaggedOnly ? questions.filter((q) => q.flagged) : questions),
-    [questions, showFlaggedOnly]
-  );
+  const displayList = useMemo(() => {
+    let list = showFlaggedOnly ? questions.filter((q) => q.flagged) : questions;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (item) =>
+          item.question.toLowerCase().includes(q) ||
+          item.options.some((o) => o.option.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [questions, showFlaggedOnly, searchQuery]);
 
   const current = displayList[currentIdx] || null;
 
@@ -199,6 +208,13 @@ const Quiz = () => {
         <p className="text-xs text-muted-foreground mt-1">
           {attendedCount}/{questions.length} attended
         </p>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentIdx(0); setSelected([]); setRevealed(false); setEditing(false); }}
+          placeholder="Search questions…"
+          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {displayList.map((q, idx) => (
@@ -211,7 +227,7 @@ const Quiz = () => {
             )}
           >
             <span className="shrink-0 w-5 text-center font-mono">{idx + 1}</span>
-            <span className="truncate flex-1">Q{q.id}</span>
+            <span className="truncate flex-1">{q.question.substring(0, 50)}{q.question.length > 50 ? "…" : ""}</span>
             {q.attended && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
             {q.flagged && <Flag className="w-3.5 h-3.5 text-accent shrink-0 fill-accent" />}
           </button>
