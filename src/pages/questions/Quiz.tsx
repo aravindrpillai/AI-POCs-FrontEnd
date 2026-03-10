@@ -208,6 +208,13 @@ const Quiz = () => {
         <p className="text-xs text-muted-foreground mt-1">
           {attendedCount}/{questions.length} attended
         </p>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentIdx(0); setSelected([]); setRevealed(false); setEditing(false); }}
+          placeholder="Search questions…"
+          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {displayList.map((q, idx) => (
@@ -220,7 +227,7 @@ const Quiz = () => {
             )}
           >
             <span className="shrink-0 w-5 text-center font-mono">{idx + 1}</span>
-            <span className="truncate flex-1">Q{q.id}</span>
+            <span className="truncate flex-1">{q.question.substring(0, 50)}{q.question.length > 50 ? "…" : ""}</span>
             {q.attended && <Check className="w-3.5 h-3.5 text-success shrink-0" />}
             {q.flagged && <Flag className="w-3.5 h-3.5 text-accent shrink-0 fill-accent" />}
           </button>
