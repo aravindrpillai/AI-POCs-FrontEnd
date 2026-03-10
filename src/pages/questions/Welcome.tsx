@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, FileJson, Upload, ArrowRight, Brain, Sparkles, Zap } from "lucide-react";
+import { BookOpen, FileJson, Upload, ArrowRight, Brain, Sparkles, Zap, FileUp } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const floatingIcons = [
   { Icon: Brain, x: "12%", y: "18%", delay: 0, size: 20 },
