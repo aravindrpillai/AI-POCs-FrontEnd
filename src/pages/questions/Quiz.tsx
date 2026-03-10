@@ -258,14 +258,14 @@ const Quiz = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       {/* Desktop Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex-col shrink-0 hidden md:flex">
+      <aside className="w-64 border-r border-border bg-card flex-col shrink-0 hidden md:flex overflow-hidden">
         {sidebarContent}
       </aside>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col min-h-screen min-w-0">
+      <main className="flex-1 flex flex-col h-screen min-w-0">
         {/* Toolbar */}
         <header className="flex items-center gap-2 p-3 border-b border-border bg-card flex-wrap">
           {/* Mobile drawer trigger */}
