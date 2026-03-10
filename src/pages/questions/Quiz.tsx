@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { RotateCcw, Flag, Download, Upload, Check, ChevronRight, ChevronLeft, BookOpen, Eye, FlagOff } from "lucide-react";
+import { RotateCcw, Flag, Download, Upload, Check, ChevronRight, ChevronLeft, BookOpen, Eye, FlagOff, Pencil, Save, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -36,23 +36,20 @@ const Quiz = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editOptions, setEditOptions] = useState<Option[]>([]);
+  const [editAnswers, setEditAnswers] = useState<string[]>([]);
 
-  // Load from sessionStorage
   useEffect(() => {
     const raw = sessionStorage.getItem("exam-questions");
-    if (!raw) {
-      navigate("/questions");
-      return;
-    }
+    if (!raw) { navigate("/questions"); return; }
     try {
       const data: Question[] = JSON.parse(raw);
       setQuestions(shuffle(data));
-    } catch {
-      navigate("/questions");
-    }
+    } catch { navigate("/questions"); }
   }, [navigate]);
 
-  // Filtered list
   const displayList = useMemo(
     () => (showFlaggedOnly ? questions.filter((q) => q.flagged) : questions),
     [questions, showFlaggedOnly]
@@ -60,10 +57,10 @@ const Quiz = () => {
 
   const current = displayList[currentIdx] || null;
 
-  // Shuffled options for current question
   const shuffledOptions = useMemo(
     () => (current ? shuffle(current.options) : []),
-    [current?.id] // re-shuffle only when question changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [current?.id]
   );
 
   const isMulti = current ? current.answer.length > 1 : false;
@@ -80,7 +77,7 @@ const Quiz = () => {
   );
 
   const toggleSelect = (optId: string) => {
-    if (revealed) return;
+    if (revealed || editing) return;
     setSelected((prev) =>
       isMulti
         ? prev.includes(optId) ? prev.filter((s) => s !== optId) : [...prev, optId]
@@ -97,23 +94,20 @@ const Quiz = () => {
   const handleNext = () => {
     if (currentIdx < displayList.length - 1) {
       setCurrentIdx((i) => i + 1);
-      setSelected([]);
-      setRevealed(false);
+      setSelected([]); setRevealed(false); setEditing(false);
     }
   };
 
   const handlePrev = () => {
     if (currentIdx > 0) {
       setCurrentIdx((i) => i - 1);
-      setSelected([]);
-      setRevealed(false);
+      setSelected([]); setRevealed(false); setEditing(false);
     }
   };
 
   const goTo = (idx: number) => {
     setCurrentIdx(idx);
-    setSelected([]);
-    setRevealed(false);
+    setSelected([]); setRevealed(false); setEditing(false);
   };
 
   const toggleFlag = () => {
@@ -127,19 +121,14 @@ const Quiz = () => {
       sessionStorage.setItem("exam-questions", JSON.stringify(next));
       return next;
     });
-    setCurrentIdx(0);
-    setSelected([]);
-    setRevealed(false);
-    setShowFlaggedOnly(false);
+    setCurrentIdx(0); setSelected([]); setRevealed(false); setShowFlaggedOnly(false); setEditing(false);
   };
 
   const downloadJson = () => {
     const blob = new Blob([JSON.stringify(questions, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "questions.json";
-    a.click();
+    a.href = url; a.download = "questions.json"; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -153,14 +142,9 @@ const Quiz = () => {
         if (Array.isArray(data)) {
           sessionStorage.setItem("exam-questions", JSON.stringify(data));
           setQuestions(shuffle(data));
-          setCurrentIdx(0);
-          setSelected([]);
-          setRevealed(false);
-          setShowFlaggedOnly(false);
+          setCurrentIdx(0); setSelected([]); setRevealed(false); setShowFlaggedOnly(false); setEditing(false);
         }
-      } catch {
-        alert("Invalid JSON file");
-      }
+      } catch { alert("Invalid JSON file"); }
     };
     reader.readAsText(file);
     e.target.value = "";
@@ -168,9 +152,36 @@ const Quiz = () => {
 
   const toggleShowFlagged = () => {
     setShowFlaggedOnly((v) => !v);
-    setCurrentIdx(0);
-    setSelected([]);
+    setCurrentIdx(0); setSelected([]); setRevealed(false); setEditing(false);
+  };
+
+  // Edit handlers
+  const startEdit = () => {
+    if (!current) return;
+    setEditQuestion(current.question);
+    setEditOptions(current.options.map((o) => ({ ...o })));
+    setEditAnswers([...current.answer]);
+    setEditing(true);
     setRevealed(false);
+    setSelected([]);
+  };
+
+  const cancelEdit = () => setEditing(false);
+
+  const saveEdit = () => {
+    if (!current) return;
+    updateQuestion(current.id, {
+      question: editQuestion,
+      options: editOptions,
+      answer: editAnswers,
+    });
+    setEditing(false);
+  };
+
+  const toggleEditAnswer = (optId: string) => {
+    setEditAnswers((prev) =>
+      prev.includes(optId) ? prev.filter((a) => a !== optId) : [...prev, optId]
+    );
   };
 
   if (!questions.length) return null;
@@ -228,6 +239,9 @@ const Quiz = () => {
           <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors">
             <Upload className="w-3.5 h-3.5" /> Upload
           </button>
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors">
+            <Save className="w-3.5 h-3.5" /> Save State
+          </button>
           <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleUpload} />
 
           <div className="ml-auto text-xs text-muted-foreground">
@@ -247,100 +261,183 @@ const Quiz = () => {
                 transition={{ duration: 0.25 }}
                 className="w-full max-w-2xl"
               >
-                {/* Question header */}
-                <div className="flex items-start justify-between gap-3 mb-6">
+                {editing ? (
+                  /* ── Edit Mode ── */
                   <div>
-                    <span className="text-xs font-medium text-muted-foreground">Question {currentIdx + 1}</span>
-                    {isMulti && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
-                        Select {current.answer.length}
-                      </span>
-                    )}
-                    <h2 className="text-base md:text-lg font-heading font-bold text-foreground mt-1 leading-snug">
-                      {current.question}
-                    </h2>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-medium text-muted-foreground">Editing Question {currentIdx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={cancelEdit} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors">
+                          <X className="w-3.5 h-3.5" /> Cancel
+                        </button>
+                        <button onClick={saveEdit} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors">
+                          <Save className="w-3.5 h-3.5" /> Save
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Editable question text */}
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Question</label>
+                    <textarea
+                      value={editQuestion}
+                      onChange={(e) => setEditQuestion(e.target.value)}
+                      className="w-full rounded-xl border border-border bg-card p-3 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring mb-5"
+                      rows={3}
+                    />
+
+                    {/* Editable options */}
+                    <label className="block text-xs font-medium text-muted-foreground mb-2">Options</label>
+                    <div className="space-y-2.5 mb-5">
+                      {editOptions.map((opt, i) => (
+                        <div key={opt.id} className="flex items-start gap-3">
+                          <span className="shrink-0 w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-1">
+                            {opt.id}
+                          </span>
+                          <input
+                            type="text"
+                            value={opt.option}
+                            onChange={(e) => {
+                              const next = [...editOptions];
+                              next[i] = { ...next[i], option: e.target.value };
+                              setEditOptions(next);
+                            }}
+                            className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Answer selection */}
+                    <label className="block text-xs font-medium text-muted-foreground mb-2">Correct Answer(s) — click to toggle</label>
+                    <div className="flex flex-wrap gap-2">
+                      {editOptions.map((opt) => {
+                        const isAnswer = editAnswers.includes(opt.id);
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => toggleEditAnswer(opt.id)}
+                            className={cn(
+                              "px-4 py-2 rounded-lg border text-sm font-medium transition-colors",
+                              isAnswer
+                                ? "border-success bg-success/10 text-success"
+                                : "border-border bg-card text-foreground hover:bg-muted"
+                            )}
+                          >
+                            {opt.id}
+                            {isAnswer && <Check className="w-3.5 h-3.5 inline ml-1.5" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <button
-                    onClick={toggleFlag}
-                    className={cn(
-                      "shrink-0 p-2 rounded-lg border transition-colors",
-                      current.flagged
-                        ? "border-accent bg-accent/10 text-accent"
-                        : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-                    )}
-                    title={current.flagged ? "Unflag" : "Flag this question"}
-                  >
-                    {current.flagged ? <FlagOff className="w-4 h-4" /> : <Flag className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                {/* Options */}
-                <div className="space-y-2.5 mb-8">
-                  {shuffledOptions.map((opt) => {
-                    const isSelected = selected.includes(opt.id);
-                    const isCorrect = current.answer.includes(opt.id);
-                    const isWrong = revealed && isSelected && !isCorrect;
-                    const isRight = revealed && isCorrect;
-
-                    return (
-                      <button
-                        key={opt.id}
-                        onClick={() => toggleSelect(opt.id)}
-                        disabled={revealed}
-                        className={cn(
-                          "w-full flex items-start gap-3 p-4 rounded-xl border text-left text-sm transition-all",
-                          !revealed && isSelected && "border-primary bg-primary/5 ring-1 ring-primary/20",
-                          !revealed && !isSelected && "border-border bg-card hover:bg-muted",
-                          isRight && "border-success bg-success/10 ring-1 ring-success/30",
-                          isWrong && "border-destructive bg-destructive/10 ring-1 ring-destructive/30",
-                          revealed && !isRight && !isWrong && "border-border bg-card opacity-60"
+                ) : (
+                  /* ── Quiz Mode ── */
+                  <>
+                    {/* Question header */}
+                    <div className="flex items-start justify-between gap-3 mb-6">
+                      <div>
+                        <span className="text-xs font-medium text-muted-foreground">Question {currentIdx + 1}</span>
+                        {isMulti && (
+                          <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+                            Select {current.answer.length}
+                          </span>
                         )}
+                        <h2 className="text-base md:text-lg font-heading font-bold text-foreground mt-1 leading-snug">
+                          {current.question}
+                        </h2>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={startEdit}
+                          className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          title="Edit question"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={toggleFlag}
+                          className={cn(
+                            "p-2 rounded-lg border transition-colors",
+                            current.flagged
+                              ? "border-accent bg-accent/10 text-accent"
+                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                          )}
+                          title={current.flagged ? "Unflag" : "Flag this question"}
+                        >
+                          {current.flagged ? <FlagOff className="w-4 h-4" /> : <Flag className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Options */}
+                    <div className="space-y-2.5 mb-8">
+                      {shuffledOptions.map((opt) => {
+                        const isSelected = selected.includes(opt.id);
+                        const isCorrect = current.answer.includes(opt.id);
+                        const isWrong = revealed && isSelected && !isCorrect;
+                        const isRight = revealed && isCorrect;
+
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => toggleSelect(opt.id)}
+                            disabled={revealed}
+                            className={cn(
+                              "w-full flex items-start gap-3 p-4 rounded-xl border text-left text-sm transition-all",
+                              !revealed && isSelected && "border-primary bg-primary/5 ring-1 ring-primary/20",
+                              !revealed && !isSelected && "border-border bg-card hover:bg-muted",
+                              isRight && "border-success bg-success/10 ring-1 ring-success/30",
+                              isWrong && "border-destructive bg-destructive/10 ring-1 ring-destructive/30",
+                              revealed && !isRight && !isWrong && "border-border bg-card opacity-60"
+                            )}
+                          >
+                            <span className={cn(
+                              "shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold",
+                              !revealed && isSelected && "bg-primary text-primary-foreground",
+                              !revealed && !isSelected && "bg-muted text-muted-foreground",
+                              isRight && "bg-success text-success-foreground",
+                              isWrong && "bg-destructive text-destructive-foreground",
+                              revealed && !isRight && !isWrong && "bg-muted text-muted-foreground"
+                            )}>
+                              {opt.id}
+                            </span>
+                            <span className="flex-1 pt-0.5">{opt.option}</span>
+                            {isRight && <Check className="w-4 h-4 text-success shrink-0 mt-1" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handlePrev}
+                        disabled={currentIdx === 0}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none"
                       >
-                        <span className={cn(
-                          "shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold",
-                          !revealed && isSelected && "bg-primary text-primary-foreground",
-                          !revealed && !isSelected && "bg-muted text-muted-foreground",
-                          isRight && "bg-success text-success-foreground",
-                          isWrong && "bg-destructive text-destructive-foreground",
-                          revealed && !isRight && !isWrong && "bg-muted text-muted-foreground"
-                        )}>
-                          {opt.id}
-                        </span>
-                        <span className="flex-1 pt-0.5">{opt.option}</span>
-                        {isRight && <Check className="w-4 h-4 text-success shrink-0 mt-1" />}
+                        <ChevronLeft className="w-4 h-4" /> Prev
                       </button>
-                    );
-                  })}
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handlePrev}
-                    disabled={currentIdx === 0}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Prev
-                  </button>
-
-                  {!revealed ? (
-                    <button
-                      onClick={handleReveal}
-                      disabled={selected.length === 0}
-                      className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:pointer-events-none"
-                    >
-                      <Eye className="w-4 h-4" /> Reveal Answer
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleNext}
-                      disabled={currentIdx >= displayList.length - 1}
-                      className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:pointer-events-none"
-                    >
-                      Next <ChevronRight className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+                      {!revealed ? (
+                        <button
+                          onClick={handleReveal}
+                          disabled={selected.length === 0}
+                          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                        >
+                          <Eye className="w-4 h-4" /> Reveal Answer
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleNext}
+                          disabled={currentIdx >= displayList.length - 1}
+                          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                        >
+                          Next <ChevronRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </motion.div>
             </AnimatePresence>
           ) : (
