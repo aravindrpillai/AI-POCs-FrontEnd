@@ -103,7 +103,7 @@ const Quiz = () => {
   const handleReveal = () => {
     if (!current) return;
     setRevealed(true);
-    updateQuestion(current.id, { attended: true });
+    updateQuestion(current.id, { attended: true, userAnswer: [...selected] });
   };
 
   const handleNext = () => {
