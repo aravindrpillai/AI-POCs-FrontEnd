@@ -38,7 +38,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/claims" element={<ClaimsWelcome />} />
+          <Route path="/claims/" element={<ClaimsWelcome />} />
           <Route path="/claim" element={<Navigate to="/claim/new" replace />} />
+          <Route path="/claim/" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/:convId" element={<Index />} />
 
           <Route path="/cv" element={<CvWelcome />} />
