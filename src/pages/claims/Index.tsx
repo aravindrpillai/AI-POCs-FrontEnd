@@ -1,12 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Message, AttachmentFile, ClaimStep, AIResponseData } from "@/types/claim";
 import ChatWindow from "@/components/claim/ChatWindow";
 import Composer from "@/components/claim/Composer";
 import ProgressPanel from "@/components/claim/ProgressPanel";
 import AttachmentCard from "@/components/claim/AttachmentCard";
 import SummaryScreen from "@/components/claim/SummaryScreen";
-import { claimApi } from "@/services/claimApi";
+import { claimApi, ClaimQueryParams } from "@/services/claimApi";
 import { ShieldCheck, Lightbulb, ChevronDown, ChevronUp, Loader2, CheckCircle2, Lock } from "lucide-react";
 
 const WELCOME_MESSAGE = "Hi there! 👋 I'm your claims assistant. I'm here to help you file a claim quickly and easily. Please describe what happened — include as much detail as you'd like.";
@@ -15,6 +15,28 @@ const genId = () => Math.random().toString(36).slice(2, 10);
 const Index = () => {
   const { convId: convIdParam } = useParams<{ convId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const queryParams = useMemo<ClaimQueryParams | undefined>(() => {
+    const p = new URLSearchParams(location.search);
+    const company = p.get("company") ?? undefined;
+    if (!company) return undefined;
+    return {
+      company,
+      email:        p.get("email")        ?? undefined,
+      name:         p.get("name")         ?? undefined,
+      policynumber: p.get("policynumber") ?? undefined,
+      mobile:       p.get("mobile")       ?? undefined,
+    };
+  }, [location.search]);
+
+  // Use name if available, else email, else fall back to generic welcome
+  const welcomeMessage = useMemo(() => {
+    if (!queryParams?.company) return WELCOME_MESSAGE;
+    const displayName = queryParams.name || queryParams.email;
+    if (displayName) return `Hello ${displayName}, How can I help you?`;
+    return WELCOME_MESSAGE;
+  }, [queryParams]);
 
   const [initializing, setInitializing] = useState(true);
   const [convId, setConvId] = useState<string | undefined>(undefined);
@@ -34,7 +56,6 @@ const Index = () => {
     setMessages((prev) => [...prev, { ...msg, id: genId(), timestamp: new Date() }]);
   }, []);
 
-  // ── Handle AI response state updates ──────────────────────────────────
   const handleAIResponse = useCallback((response: any) => {
     if (response.summary && response.data) {
       setCurrentStep('submit');
@@ -49,18 +70,17 @@ const Index = () => {
     }
   }, []);
 
-  // ── On mount: create new conv or load existing ─────────────────────────
   useEffect(() => {
     const init = async () => {
       setInitializing(true);
       try {
         if (convIdParam === "new") {
-          const newConvId = await claimApi.createConversation();
+          const newConvId = await claimApi.createConversation(queryParams);
           setConvId(newConvId);
-          navigate(`/claim/${newConvId}`, { replace: true });
-          setMessages([{ id: genId(), type: 'ai', content: WELCOME_MESSAGE, timestamp: new Date() }]);
+          navigate(`/claim/${newConvId}${location.search}`, { replace: true });
+          setMessages([{ id: genId(), type: 'ai', content: welcomeMessage, timestamp: new Date() }]);
         } else if (convIdParam) {
-          const data = await claimApi.getConversation(convIdParam);
+          const data = await claimApi.getConversation(convIdParam, queryParams);
           setConvId(data.conv_id);
 
           if (data.submitted && data.summary) {
@@ -70,10 +90,10 @@ const Index = () => {
           }
 
           if (data.messages.length === 0) {
-            setMessages([{ id: genId(), type: 'ai', content: WELCOME_MESSAGE, timestamp: new Date() }]);
+            setMessages([{ id: genId(), type: 'ai', content: welcomeMessage, timestamp: new Date() }]);
           } else {
             const restored: Message[] = [
-              { id: genId(), type: 'ai', content: WELCOME_MESSAGE, timestamp: new Date() },
+              { id: genId(), type: 'ai', content: welcomeMessage, timestamp: new Date() },
               ...data.messages.map((m) => ({
                 id: genId(),
                 type: (m.is_file ? 'attachment' : m.role === 'user' ? 'user' : 'ai') as Message['type'],
@@ -103,9 +123,8 @@ const Index = () => {
     };
 
     init();
-  }, [convIdParam]);
+  }, [convIdParam, welcomeMessage, queryParams]);
 
-  // ── Send message ───────────────────────────────────────────────────────
   const handleSend = useCallback(async (text: string) => {
     if (!convId || submitted) return;
     setError(null);
@@ -114,7 +133,7 @@ const Index = () => {
     if (currentStep === 'describe') setCurrentStep('details');
 
     try {
-      const response = await claimApi.sendMessage(text, convId);
+      const response = await claimApi.sendMessage(text, convId, queryParams);
       setIsTyping(false);
       addMessage({ type: 'ai', content: response.reply });
       handleAIResponse(response);
@@ -124,15 +143,12 @@ const Index = () => {
       setError(msg);
       addMessage({ type: 'ai', content: `Sorry, I ran into an issue: ${msg}` });
     }
-  }, [convId, submitted, currentStep, addMessage, handleAIResponse]);
+  }, [convId, submitted, currentStep, addMessage, handleAIResponse, queryParams]);
 
-  // ── Attach files ───────────────────────────────────────────────────────
   const handleAttach = useCallback(async (files: FileList) => {
     if (!convId || submitted) return;
 
     const fileArray = Array.from(files);
-
-    // Register all as pending before starting uploads
     const tempIds = fileArray.map(() => genId());
     tempIds.forEach((id) => pendingUploadsRef.current.add(id));
 
@@ -154,7 +170,7 @@ const Index = () => {
       addMessage({ type: 'attachment', content: '', attachment });
 
       try {
-        const result = await claimApi.uploadFile(convId, file);
+        const result = await claimApi.uploadFile(convId, file, undefined, queryParams);
 
         const update = (a: AttachmentFile) =>
           a.id === tempId
@@ -191,18 +207,16 @@ const Index = () => {
       }
     });
 
-    // Wait for ALL uploads in this batch to finish
     const results = await Promise.all(uploadPromises);
     const succeededCount = results.filter((r) => r.success).length;
 
-    // Auto-send message only if at least one upload succeeded
     if (succeededCount > 0) {
       const fileWord = succeededCount === 1 ? "file" : "files";
       const autoMsg  = `${succeededCount} ${fileWord} attached.`;
 
       try {
         setIsTyping(true);
-        const response = await claimApi.sendMessage(autoMsg, convId);
+        const response = await claimApi.sendMessage(autoMsg, convId, queryParams);
         setIsTyping(false);
         addMessage({ type: 'user', content: autoMsg });
         addMessage({ type: 'ai', content: response.reply });
@@ -214,16 +228,14 @@ const Index = () => {
         addMessage({ type: 'ai', content: `Sorry, I ran into an issue: ${msg}` });
       }
     }
-  }, [convId, submitted, addMessage, handleAIResponse]);
+  }, [convId, submitted, addMessage, handleAIResponse, queryParams]);
 
-  // ── Delete attachment ──────────────────────────────────────────────────
   const handleDeleteAttachment = useCallback((id: string) => {
     if (submitted) return;
     setAttachments((prev) => prev.filter((a) => a.id !== id));
     setMessages((prev) => prev.filter((m) => !(m.type === 'attachment' && m.attachment?.id === id)));
   }, [submitted]);
 
-  // ── Note change ────────────────────────────────────────────────────────
   const handleNoteChange = useCallback((id: string, note: string) => {
     setAttachments((prev) => prev.map((a) => a.id === id ? { ...a, note } : a));
     setMessages((prev) => prev.map((m) =>
@@ -235,8 +247,9 @@ const Index = () => {
 
   const handleSummaryClose = useCallback(() => setShowSummary(false), []);
 
+  // Preserve query string when starting a new claim
   const handleStartNew = useCallback(() => {
-    navigate("/claim/new", { replace: true });
+    navigate(`/claim/new${location.search}`, { replace: true });
     setMessages([]);
     setAttachments([]);
     setCurrentStep('describe');
@@ -245,9 +258,8 @@ const Index = () => {
     setShowSummary(false);
     setSubmitted(false);
     setError(null);
-  }, [navigate]);
+  }, [navigate, location.search]);
 
-  // ── Loading ─────────────────────────────────────────────────────────────
   if (initializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -264,14 +276,13 @@ const Index = () => {
     );
   }
 
-  // ── Error ────────────────────────────────────────────────────────────────
   if (error && !convId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4 max-w-sm text-center px-4">
           <p className="text-sm text-destructive">{error}</p>
           <button
-            onClick={() => navigate("/claim/new", { replace: true })}
+            onClick={() => navigate(`/claim/new${location.search}`, { replace: true })}
             className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
           >
             Start New Claim
@@ -281,11 +292,9 @@ const Index = () => {
     );
   }
 
-  // ── Main ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col">
 
-      {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
@@ -311,10 +320,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Main */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col lg:flex-row gap-4 md:gap-6">
 
-        {/* Chat */}
         <div
           className="flex-1 flex flex-col bg-card rounded-2xl shadow-card border border-border overflow-hidden min-h-0"
           style={{ maxHeight: 'calc(100vh - 120px)' }}
@@ -326,7 +333,6 @@ const Index = () => {
             onNoteChange={handleNoteChange}
           />
 
-          {/* Bottom bar */}
           {submitted && summaryData ? (
             <div className="border-t border-border bg-success/5 px-6 py-5 flex flex-col items-center gap-4 flex-shrink-0">
               <div className="flex items-center gap-2 text-success">
@@ -361,7 +367,6 @@ const Index = () => {
           )}
         </div>
 
-        {/* Side Panel */}
         <aside className="lg:w-80 flex-shrink-0">
           <button
             className="lg:hidden w-full flex items-center justify-between p-3 rounded-xl bg-card shadow-card border border-border mb-3"
@@ -431,7 +436,6 @@ const Index = () => {
         </aside>
       </main>
 
-      {/* Summary Modal */}
       {showSummary && summaryData && convId && (
         <SummaryScreen
           data={summaryData}

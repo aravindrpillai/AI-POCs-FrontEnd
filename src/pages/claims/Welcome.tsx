@@ -116,7 +116,7 @@ const Welcome = () => {
           transition={{ delay: 1.3, type: "spring" }}
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate("/claim/new")}
+          onClick={() => navigate(`/claim/new${location.search}`)}
           className="group flex items-center gap-3 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-heading font-bold text-base shadow-elevated hover:shadow-lg transition-shadow"
         >
           File a Claim
