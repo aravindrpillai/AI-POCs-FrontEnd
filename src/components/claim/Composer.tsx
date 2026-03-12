@@ -1,5 +1,5 @@
-import { useRef, useState, KeyboardEvent } from "react";
-import { Paperclip, Send } from "lucide-react";
+import { useRef, useState, useEffect, KeyboardEvent } from "react";
+import { Paperclip, Send, Mic, MicOff } from "lucide-react";
 
 interface ComposerProps {
   onSend: (text: string) => void;
@@ -10,12 +10,76 @@ interface ComposerProps {
 
 const Composer = ({ onSend, onAttach, disabled, placeholder }: ComposerProps) => {
   const [text, setText] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) return;
+
+    setSpeechSupported(true);
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        setText((prev) => {
+          const joined = prev ? prev + " " + finalTranscript.trim() : finalTranscript.trim();
+          // Auto-resize textarea
+          requestAnimationFrame(() => {
+            if (textareaRef.current) {
+              textareaRef.current.style.height = "auto";
+              textareaRef.current.style.height =
+                Math.min(textareaRef.current.scrollHeight, 120) + "px";
+            }
+          });
+          return joined;
+        });
+      }
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error("Speech error:", e.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
     onSend(trimmed);
     setText("");
     if (textareaRef.current) {
@@ -67,11 +131,29 @@ const Composer = ({ onSend, onAttach, disabled, placeholder }: ComposerProps) =>
           value={text}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || "Describe what happened…"}
+          placeholder={isListening ? "Listening…" : placeholder || "Describe what happened…"}
           disabled={disabled}
           rows={1}
           className="flex-1 resize-none rounded-xl border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary/40 transition-all disabled:opacity-50"
         />
+
+        {/* Mic button — only shown if browser supports Speech Recognition */}
+        {speechSupported && (
+          <button
+            type="button"
+            onClick={toggleListening}
+            disabled={disabled}
+            aria-label={isListening ? "Stop listening" : "Start voice input"}
+            className={`flex-shrink-0 p-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+              isListening
+                ? "bg-red-500 text-white animate-pulse hover:bg-red-600"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={handleSend}
