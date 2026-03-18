@@ -26,6 +26,8 @@ import FileAnalyserUpload from "./pages/file-analyser/Upload";
 import FileAnalyserChat from "./pages/file-analyser/Chat";
 import QuestionsWelcome from "./pages/questions/Welcome";
 import QuestionsQuiz from "./pages/questions/Quiz";
+import JiraAIWelcome from "./pages/jira-ai/Welcome";
+import JiraAIEditor from "./pages/jira-ai/Editor";
 
 const queryClient = new QueryClient();
 
