@@ -70,6 +70,9 @@ const App = () => (
           <Route path="/questions" element={<QuestionsWelcome />} />
           <Route path="/questions/quiz" element={<QuestionsQuiz />} />
 
+          <Route path="/jira-ai" element={<JiraAIWelcome />} />
+          <Route path="/jira-ai/editor" element={<JiraAIEditor />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
