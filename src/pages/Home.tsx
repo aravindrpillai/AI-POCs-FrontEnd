@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, FileText, Sparkles, ArrowRight, Cpu, Brain, Zap, Github, ExternalLink, Stethoscope, Wallet, MessageSquare, FileSearch, BookOpen } from "lucide-react";
+import { ShieldCheck, FileText, Sparkles, ArrowRight, Cpu, Brain, Zap, Github, ExternalLink, Stethoscope, Wallet, MessageSquare, FileSearch, BookOpen, ClipboardList } from "lucide-react";
 import { motion } from "framer-motion";
 
 const floatingIcons = [
