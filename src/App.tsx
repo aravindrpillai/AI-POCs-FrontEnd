@@ -26,6 +26,8 @@ import FileAnalyserUpload from "./pages/file-analyser/Upload";
 import FileAnalyserChat from "./pages/file-analyser/Chat";
 import QuestionsWelcome from "./pages/questions/Welcome";
 import QuestionsQuiz from "./pages/questions/Quiz";
+import JiraAIWelcome from "./pages/jira-ai/Welcome";
+import JiraAIEditor from "./pages/jira-ai/Editor";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,9 @@ const App = () => (
 
           <Route path="/questions" element={<QuestionsWelcome />} />
           <Route path="/questions/quiz" element={<QuestionsQuiz />} />
+
+          <Route path="/jira-ai" element={<JiraAIWelcome />} />
+          <Route path="/jira-ai/editor" element={<JiraAIEditor />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
