@@ -39,16 +39,18 @@ const Structure = () => {
         </button>
       </header>
 
-      <main className="flex-1 flex flex-col items-center px-4 md:px-8 py-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 flex flex-col items-center px-4 md:px-8 py-8 w-full">
         <h1 className="text-2xl md:text-3xl font-bold font-heading text-foreground mb-2">Response Structure</h1>
         <p className="text-sm text-muted-foreground mb-6 text-center">
           This is the JSON structure returned by the Claims AI after processing a claim.
         </p>
-        <ScrollArea className="w-full flex-1 rounded-xl border border-border bg-muted/30">
-          <pre className="p-6 text-sm font-mono text-foreground whitespace-pre-wrap break-words">
-            {JSON.stringify(SAMPLE_STRUCTURE, null, 2)}
-          </pre>
-        </ScrollArea>
+        <div className="w-full md:w-[80%] flex-1 min-h-0">
+          <ScrollArea className="w-full h-[400px] md:h-[500px] rounded-xl border border-border bg-white dark:bg-white/95">
+            <pre className="p-6 text-sm font-mono text-foreground whitespace-pre-wrap break-words">
+              {JSON.stringify(SAMPLE_STRUCTURE, null, 2)}
+            </pre>
+          </ScrollArea>
+        </div>
       </main>
     </div>
   );
