@@ -46,6 +46,8 @@ const App = () => (
           <Route path="/claim" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/:convId" element={<Index />} />
+          <Route path="/claims/prompt" element={<ClaimsPrompt />} />
+          <Route path="/claims/structure" element={<ClaimsStructure />} />
 
           <Route path="/cv" element={<CvWelcome />} />
           <Route path="/cv/uploadresume" element={<UploadResume />} />
