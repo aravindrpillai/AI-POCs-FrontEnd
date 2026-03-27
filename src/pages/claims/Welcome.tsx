@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, ArrowRight, ArrowLeft, MessageSquare, Camera, FileCheck, ClipboardCheck, Send } from "lucide-react";
+import { ShieldCheck, ArrowRight, ArrowLeft, MessageSquare, Camera, FileCheck, ClipboardCheck, Send, Settings, Code } from "lucide-react";
 
 const steps = [
   { icon: "💬", title: "Describe Incident", desc: "Tell the AI what happened — accident, damage, theft or more." },
