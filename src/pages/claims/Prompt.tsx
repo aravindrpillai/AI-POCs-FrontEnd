@@ -33,17 +33,19 @@ const Prompt = () => {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center px-4 md:px-8 py-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 flex flex-col items-center px-4 md:px-8 py-8 w-full">
         <h1 className="text-2xl md:text-3xl font-bold font-heading text-foreground mb-2">AI Prompt</h1>
         <p className="text-sm text-muted-foreground mb-6 text-center">
           Configure the system prompt used by the Claims AI assistant.
         </p>
-        <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter the AI system prompt here..."
-          className="flex-1 w-full min-h-[400px] md:min-h-[500px] text-sm font-mono resize-y"
-        />
+        <div className="w-full md:w-[80%] flex-1 flex flex-col min-h-0">
+          <Textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Enter the AI system prompt here..."
+            className="flex-1 w-full min-h-[400px] md:min-h-[500px] text-sm font-mono resize-none overflow-y-auto bg-white dark:bg-white/95 text-foreground"
+          />
+        </div>
       </main>
     </div>
   );
