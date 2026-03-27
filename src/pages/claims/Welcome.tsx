@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, ArrowRight, ArrowLeft, MessageSquare, Camera, FileCheck, ClipboardCheck, Send } from "lucide-react";
+import { ShieldCheck, ArrowRight, ArrowLeft, MessageSquare, Camera, FileCheck, ClipboardCheck, Send, Settings, Code } from "lucide-react";
 
 const steps = [
   { icon: "💬", title: "Describe Incident", desc: "Tell the AI what happened — accident, damage, theft or more." },
@@ -122,6 +122,27 @@ const Welcome = () => {
           File a Claim
           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </motion.button>
+
+        {/* Extra buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+          className="flex flex-wrap items-center justify-center gap-3 mt-6"
+        >
+          <button
+            onClick={() => navigate("/claims/prompt")}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-accent transition-colors"
+          >
+            <Settings className="w-4 h-4" /> AI Prompt
+          </button>
+          <button
+            onClick={() => navigate("/claims/structure")}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-accent transition-colors"
+          >
+            <Code className="w-4 h-4" /> Response Structure
+          </button>
+        </motion.div>
 
         {/* Disclaimer */}
         <motion.p

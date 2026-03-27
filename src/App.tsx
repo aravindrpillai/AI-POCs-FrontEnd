@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import ClaimsWelcome from "./pages/claims/Welcome";
 import Index from "./pages/claims/Index";
+import ClaimsPrompt from "./pages/claims/Prompt";
+import ClaimsStructure from "./pages/claims/Structure";
 import NotFound from "./pages/NotFound";
 
 
@@ -44,6 +46,8 @@ const App = () => (
           <Route path="/claim" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/" element={<Navigate to="/claim/new" replace />} />
           <Route path="/claim/:convId" element={<Index />} />
+          <Route path="/claims/prompt" element={<ClaimsPrompt />} />
+          <Route path="/claims/structure" element={<ClaimsStructure />} />
 
           <Route path="/cv" element={<CvWelcome />} />
           <Route path="/cv/uploadresume" element={<UploadResume />} />
