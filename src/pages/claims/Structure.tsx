@@ -2,28 +2,68 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const SAMPLE_STRUCTURE = {
-  claim: {
-    what_happened: "",
-    incident_date: "",
-    incident_location: "",
-    parties_involved: [
-      { name: "", role: "", phone: "", email: "", injury: "" }
+const SAMPLE_STRUCTURE = `
+{
+  "summary": "true",
+  "data": {
+    "what_happened": "",
+    "incident_date": "",
+    "incident_location": "",
+
+    "parties_involved": [
+      {
+        "name": "",
+        "role": "",
+        "phone": "",
+        "email": "",
+        "injury": ""
+      }
     ],
-    vehicle_number: "",
-    other_vehicle_number: "",
-    contact_details: [{ name: "", phone: "", email: "" }],
-    police_fir_number: "",
-    policy_number: "",
-    severity: 0,
-    genuinity_score: 0,
-    genuinity_rationale: "",
-    damage_map: {
-      is_collision: false,
-      damages: [{ view: "", zones: [] }]
-    }
+
+    "vehicle_number": "",
+    "other_vehicle_number": "",
+
+    "contact_details": [
+      {
+        "name": "",
+        "phone": "",
+        "email": ""
+      }
+    ],
+
+    "police_fir_number": "",
+    "policy_number": "",
+
+    "severity": 1-10,
+    "genuinity_score": 1-10,
+    "genuinity_rationale": "POSITIVE INDICATORS: ...\nRED FLAGS: ...\nIMAGE ANALYSIS: ...\nRECOMMENDATION: ...",
+
+    "images": [
+      {
+        "filename": "",
+        "description": "",
+        "vehicle_match": true,
+        "plate_match": true,
+        "damage_consistent": true,
+        "flags": []
+      }
+    ],
+
+    "damage_map": {
+      "is_collision": true,
+      "damages": [
+        {
+          "view": "front | rear | side_left | side_right | top",
+          "zones": ["bumper", "hood", "fender", "front_door", "rear_door", "quarter_panel", "roof", "trunk", "windshield", "pillar"]
+        }
+      ]
+    },
+
+    "ai_images": []
   }
-};
+}
+
+`.trim()
 
 const Structure = () => {
   const navigate = useNavigate();
@@ -47,7 +87,7 @@ const Structure = () => {
         <div className="w-full md:w-[80%] flex-1 min-h-0">
           <ScrollArea className="w-full h-[400px] md:h-[500px] rounded-xl border border-border bg-white dark:bg-white/95">
             <pre className="p-6 text-sm font-mono text-foreground whitespace-pre-wrap break-words">
-              {JSON.stringify(SAMPLE_STRUCTURE, null, 2)}
+              {SAMPLE_STRUCTURE}
             </pre>
           </ScrollArea>
         </div>
